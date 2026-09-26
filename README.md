@@ -1,37 +1,46 @@
 # FPGA Handwritten Digit Recognition
 
-A handwritten digit recognition system I am building to learn how to design, optimize, and eventually implement a machine learning classifier on an FPGA.
+A handwritten digit recognition system that I am building to learn how machine learning, numerical representation, and digital hardware can work together in an FPGA-based system.
 
 ## Project Idea
 
-The goal is to recognize handwritten digits from 0-9 and eventually perform the actual prediction calculations on an FPGA.
+The goal is to recognize handwritten digits from 0-9 and eventually perform the prediction calculations on an FPGA.
 
-Instead of only using an existing handwritten digit dataset, I plan to collect my own data and experiment with different design choices.
+Instead of only using an existing handwritten digit dataset, I am building a custom dataset and experimenting with different design choices.
 
-Some of the main things I want to test are:
+Some of the main questions I want to investigate are:
 
-- different image resolutions
-- different classifier designs
-- floating-point vs. fixed-point calculations
-- different numerical precisions
-- classification accuracy
-- FPGA resource usage
-- inference latency
+- How does image resolution affect accuracy?
+- Is 8x8 enough, or does 16x16 provide a useful improvement?
+- How much FPGA hardware does a larger image require?
+- What type of classifier works well when it needs to run on an FPGA?
+- How many bits are actually needed for pixels, weights, and calculations?
+- How much accuracy is lost when numerical precision is reduced?
+- How does fixed-point inference compare with normal software calculations?
+- How fast can the FPGA classify a digit?
+- How many FPGA resources does the design use?
 
-I also plan to build a visual interface where a digit can be drawn, and the different stages of the recognition process can be viewed.
+## Current Progress
 
-## Current Plan
+The first version of the custom dataset collector is working.
 
-The project will start with data collection and a software version of the classifier. Once that is working, I will experiment with the model and convert its calculations to fixed-point arithmetic.
+The collector uses a simple local webpage for drawing digits and a Python server for saving the collected data.
 
-The fixed-point version will then be used as a reference for a SystemVerilog implementation. After simulation and testing, the design will be moved onto a physical FPGA.
+Current features:
 
-A rough version of the final system is:
+- 128x128 drawing canvas
+- Writer ID and digit labeling
+- PNG image saving
+- Blank-drawing protection
+- Unique sample numbering
+- Protection against overwriting samples when numbering has gaps
+- Per-digit collection progress
+- Progress that persists after refreshing the page
 
-Drawing -> Image Processing -> Pixel Data -> FPGA -> Prediction -> Visual Interface
+The raw dataset is organized by writer and digit:
 
-## Current Status
-
-The repository and project structure are being set up.
-
-The next step is to design the custom handwritten digit dataset and decide how the samples will be collected, labeled, and stored.
+```text
+data/raw/
+└── writerID/
+    └── digit/
+        └── sample.png
