@@ -309,3 +309,155 @@ Keep adding important decisions, discoveries, experiment results, problems, and 
 Do not treat early ideas in this file as permanent decisions. If testing shows that an idea is bad, change it and record why.
 
 The point of these notes is to keep track of how the project developed from the beginning, including the reasoning behind important choices.
+
+## Dataset Planning
+
+### Original Sample Format
+
+I want to collect the original handwritten digits at a higher resolution instead of drawing them directly as 8x8 or 16x16 images.
+
+My current idea is to make a simple browser drawing canvas where a person can draw one digit at a time. The original drawing will be saved before it is resized for any experiments.
+
+This way I can create different versions, such as 8x8 and 16x16, from the same original handwriting. This should make it easier to compare resolutions fairly because the actual handwriting stays the same.
+
+At this point, I had not decided on the exact original canvas size yet. I decided on 128x128 later while building the first collector.
+
+### Sample Information
+
+Each saved sample should represent one handwritten digit.
+
+For each sample, I want to keep track of:
+
+- the correct digit from 0-9
+- a writer ID
+- the original 128x128 drawing
+- a unique sample ID
+
+I want to use writer IDs because I eventually want to test whether the classifier works on handwriting from people it did not see during training. This should give me a better test of how well the system generalizes instead of only randomly mixing samples from the same people between training and testing.
+
+The writer ID does not need to contain the person's actual name. It can be something simple such as `writer01`, `writer02`, etc.
+
+### Original Resolution
+
+The current original drawing canvas is 128x128 pixels.
+
+I chose a larger original image so I can create smaller versions from the same handwriting later instead of collecting separate drawings for each resolution.
+
+The first planned resolution comparison is:
+
+- 8x8
+- 16x16
+
+These are not final choices. I can change or add resolutions if the early experiments give me a reason to.
+
+### First Collection Target
+
+For the first version of the dataset, I plan to collect 10 samples of each digit from each writer.
+
+That means:
+
+10 digits x 10 samples = 100 samples per writer
+
+I do not have a final number of writers yet. I will start by collecting my own samples and make sure the full data pipeline works before asking other people to contribute handwriting.
+
+If I eventually collect from 10 writers, that would give me 1,000 original samples.
+
+I can increase the number of samples later if the experiments show that the dataset is too small.
+
+I also want the collector to keep track of how many examples of each digit have already been collected so that the dataset stays balanced.
+
+## 2026-09-26 - Dataset Collector v1
+
+I built the first working version of the custom dataset collector.
+
+The collector runs as a local webpage and currently has:
+
+- a 128x128 drawing canvas
+- a writer ID input
+- a digit label from 0-9
+- a clear button
+- a record sample button
+- a session sample counter
+- basic input validation
+
+The canvas is displayed larger in the browser so it is easier to draw on, but the actual saved image stays 128x128.
+
+I decided to use a small Python HTTP server for saving the dataset instead of trying to handle file storage entirely in the browser. The browser handles drawing and sends the sample to Python. Python validates the information and writes the PNG into the raw dataset.
+
+Current data path:
+
+Browser canvas
+-> PNG data
+-> HTTP POST
+-> Python collector server
+-> data/raw/
+
+Raw samples are organized like this:
+
+data/raw/writerID/digit/sample.png
+
+Example:
+
+data/raw/writer01/7/0001.png
+
+This keeps the writer and correct digit easy to identify without needing a separate database for basic labels.
+
+### First End-to-End Test
+
+I tested the collector using a temporary writer ID and a handwritten 7.
+
+The browser reported that the sample was saved to:
+
+data/raw/test/7/0001.png
+
+I checked the saved file and confirmed:
+
+- the file existed
+- it contained PNG data
+- the PNG signature was valid
+- the image dimensions were 128x128
+
+The temporary test data was deleted after verification so it will not become part of the real dataset.
+
+### Current Collector Architecture
+
+The interface uses basic HTML, CSS, and JavaScript for drawing and sending samples.
+
+Python handles the actual dataset storage.
+
+I want to keep the browser side simple because the interface is only a tool for collecting and viewing data. Most of the project logic will stay in Python, and the final inference calculations will eventually move to the FPGA.
+
+### Collector Improvements Completed
+
+After the first end-to-end test, I made several changes before using the collector for real data.
+
+I added blank-drawing protection so the browser will not record a sample unless something has actually been drawn on the canvas.
+
+I also changed the sample numbering system. Originally, the next number was based only on how many PNG files were already in the folder. This could cause an existing file to be overwritten if there was a gap in the numbering. The collector now finds the largest existing sample number and adds one.
+
+I tested this by creating 0001.png, 0002.png, and 0003.png, deleting 0002.png, and recording another sample. The new sample correctly became 0004.png instead of overwriting 0003.png.
+
+The collector now also shows progress for each digit from 0-9 using the target of 10 samples per digit per writer.
+
+These counts come from the actual files stored in the dataset instead of only being stored in the browser. I verified this by recording a sample, refreshing the page, and confirming that the session counter reset while the saved writer progress remained.
+
+### Collector v1 Verification
+
+The current collector has been tested for:
+
+- drawing and clearing digits
+- writer ID validation
+- digit labeling
+- blank-sample prevention
+- PNG saving
+- 128x128 image dimensions
+- unique sequential sample numbering
+- protection against overwriting when numbering has gaps
+- per-digit progress tracking
+- progress persistence across browser refreshes
+
+Temporary test samples were deleted after testing.
+
+At this point, the first version of the dataset collector is complete enough to begin collecting the initial custom dataset.
+
+The next major step after data collection will be building the preprocessing pipeline.

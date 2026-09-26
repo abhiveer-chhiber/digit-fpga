@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Digit Dataset Collector</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        #digitCanvas {
+            border: 2px solid black;
+            width: 384px;
+            height: 384px;
+            image-rendering: pixelated;
+            cursor: crosshair;
+            touch-action: none;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        input,
+        select,
+        button {
+            margin-right: 10px;
+            padding: 6px;
+        }
+
+        #digitCounts {
+            margin-top: 20px;
+        }
+
+        #digitCounts span {
+            display: inline-block;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Digit Dataset Collector</h1>
+
+    <div>
+        <label for="writerId">Writer ID:</label>
+        <input id="writerId" type="text" placeholder="writer01">
+
+        <label for="digitLabel">Digit:</label>
+        <select id="digitLabel">
+            <option value="0">0</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+        </select>
+    </div>
+
+    <canvas id="digitCanvas" width="128" height="128"></canvas>
+
+    <div>
+        <button id="clearButton">Clear</button>
+        <button id="recordButton">Record Sample</button>
+    </div>
+
+    <p>Samples recorded this session: <strong id="sampleCount">0</strong></p>
+
+    <div id="digitCounts">
+        <strong>Writer progress:</strong>
+        <span>0: <b id="count0">0</b>/10</span>
+        <span>1: <b id="count1">0</b>/10</span>
+        <span>2: <b id="count2">0</b>/10</span>
+        <span>3: <b id="count3">0</b>/10</span>
+        <span>4: <b id="count4">0</b>/10</span>
+        <span>5: <b id="count5">0</b>/10</span>
+        <span>6: <b id="count6">0</b>/10</span>
+        <span>7: <b id="count7">0</b>/10</span>
+        <span>8: <b id="count8">0</b>/10</span>
+        <span>9: <b id="count9">0</b>/10</span>
+    </div>
+
+    <p id="status"></p>
+
+    <script>
+        const canvas = document.getElementById("digitCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const writerIdInput = document.getElementById("writerId");
+        const digitLabelSelect = document.getElementById("digitLabel");
+        const clearButton = document.getElementById("clearButton");
+        const recordButton = document.getElementById("recordButton");
+        const sampleCountDisplay = document.getElementById("sampleCount");
+        const statusDisplay = document.getElementById("status");
+
+        let drawing = false;
+        let hasDrawing = false;
+        let sampleCount = 0;
+
+        function clearCanvas() {
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 8;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            hasDrawing = false;
+        }
+
+        function getCanvasPosition(event) {
+            const rect = canvas.getBoundingClientRect();
+
+            return {
+                x: (event.clientX - rect.left) * (canvas.width / rect.width),
+                y: (event.clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function showCounts(counts) {
+            for (let digit = 0; digit <= 9; digit++) {
+                document.getElementById("count" + digit).textContent = counts[digit];
+            }
+        }
+
+        async function loadCounts() {
+            const writerId = writerIdInput.value.trim();
+
+            if (writerId === "") {
+                showCounts({
+                    0: 0,
+                    1: 0,
+                    2: 0,
+                    3: 0,
+                    4: 0,
+                    5: 0,
+                    6: 0,
+                    7: 0,
+                    8: 0,
+                    9: 0
+                });
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    "/sample-counts?writer_id=" + encodeURIComponent(writerId)
+                );
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    statusDisplay.textContent = "Error: " + result.error;
+                    return;
+                }
+
+                showCounts(result.counts);
+                statusDisplay.textContent = "";
+            } catch (error) {
+                statusDisplay.textContent = "Could not load sample counts.";
+            }
+        }
+
+        clearCanvas();
+
+        canvas.addEventListener("pointerdown", (event) => {
+            drawing = true;
+
+            const position = getCanvasPosition(event);
+
+            ctx.beginPath();
+            ctx.moveTo(position.x, position.y);
+        });
+
+        canvas.addEventListener("pointermove", (event) => {
+            if (!drawing) {
+                return;
+            }
+
+            const position = getCanvasPosition(event);
+
+            ctx.lineTo(position.x, position.y);
+            ctx.stroke();
+
+            hasDrawing = true;
+        });
+
+        canvas.addEventListener("pointerup", () => {
+            drawing = false;
+            ctx.closePath();
+        });
+
+        canvas.addEventListener("pointerleave", () => {
+            drawing = false;
+            ctx.closePath();
+        });
+
+        writerIdInput.addEventListener("change", loadCounts);
+
+        clearButton.addEventListener("click", () => {
+            clearCanvas();
+            statusDisplay.textContent = "";
+        });
+
+        recordButton.addEventListener("click", async () => {
+            const writerId = writerIdInput.value.trim();
+            const digit = digitLabelSelect.value;
+
+            if (writerId === "") {
+                alert("Enter a writer ID before recording a sample.");
+                return;
+            }
+
+            if (!hasDrawing) {
+                alert("Draw a digit before recording a sample.");
+                return;
+            }
+
+            const image = canvas.toDataURL("image/png");
+
+            const sample = {
+                writer_id: writerId,
+                digit: digit,
+                image: image
+            };
+
+            statusDisplay.textContent = "Saving...";
+
+            try {
+                const response = await fetch("/save-sample", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(sample)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    statusDisplay.textContent = "Error: " + result.error;
+                    return;
+                }
+
+                sampleCount++;
+                sampleCountDisplay.textContent = sampleCount;
+
+                showCounts(result.counts);
+
+                statusDisplay.textContent = "Saved: " + result.file;
+
+                clearCanvas();
+            } catch (error) {
+                statusDisplay.textContent = "Could not connect to the Python server.";
+            }
+        });
+    </script>
+</body>
+</html>
