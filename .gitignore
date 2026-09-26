@@ -1,3 +1,20 @@
+# Python environment and cache
 .venv/
 __pycache__/
 *.pyc
+
+# Editor files
+.vscode/
+.idea/
+
+# Generated processed data
+data/processed/*
+!data/processed/.gitkeep
+
+# Experiment output
+experiments/results/
+
+# FPGA and simulation output
+build/
+*.vcd
+*.fst
