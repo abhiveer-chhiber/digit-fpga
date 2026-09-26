@@ -1,6 +1,6 @@
 # FPGA Handwritten Digit Recognition
 
-A handwritten digit recognition system that I am building to learn how a machine learning classifier can be designed, optimized, and eventually implemented on an FPGA.
+A handwritten digit recognition system I am building to learn how to design, optimize, and eventually implement a machine learning classifier on an FPGA.
 
 ## Project Idea
 
@@ -18,7 +18,7 @@ Some of the main things I want to test are:
 - FPGA resource usage
 - inference latency
 
-I also plan to build a visual interface where a digit can be drawn and the different stages of the recognition process can be viewed.
+I also plan to build a visual interface where a digit can be drawn, and the different stages of the recognition process can be viewed.
 
 ## Current Plan
 
