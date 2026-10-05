@@ -505,3 +505,15 @@ It produced 100 images at each resolution. I checked their dimensions, grayscale
 I looked at one sample of each digit at both resolutions. The 16x16 versions kept more detail, especially the loops in 6 and 8. I still need to compare recognition accuracy before deciding which resolution to use.
 
 Generated data is already ignored by Git. It can be recreated by running the preprocessing script.
+
+## 2026-10-05 - Training and Validation Split
+
+I saved a fixed split with 80 training samples and 20 validation samples. Each digit has 8 training drawings and 2 validation drawings. The split uses seed 42 and is saved in data/splits/writer01-v1.json.
+
+Both resolutions use the same original samples in each group, so the resolution comparison will not depend on different drawings being selected.
+
+I also wrote a dataset loader that converts processed pixels to values from 0 to 1 and flattens each image into a row. An 8x8 image has 64 inputs and a 16x16 image has 256.
+
+I checked the input shapes, pixel ranges, label counts, and sample assignments. All checks passed.
+
+This is still a same-writer validation split. It does not tell me how well the model handles other people's handwriting. There are only 20 validation samples, so one mistake changes accuracy by 5 percentage points.
