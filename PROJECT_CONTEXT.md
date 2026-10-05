@@ -461,3 +461,31 @@ Temporary test samples were deleted after testing.
 At this point, the first version of the dataset collector is complete enough to begin collecting the initial custom dataset.
 
 The next major step after data collection will be building the preprocessing pipeline.
+
+## 2026-10-05 - First Real Handwriting Collection
+
+I collected my first 100 samples under writer01, with 10 of each digit from 0-9.
+
+I checked the counts and used Pillow to open all the images. All 100 were readable 128x128 PNGs. I also looked at them together in a contact sheet and did not notice any blank images or wrong labels.
+
+Nine drawings touched the canvas edge:
+
+- 0/0007.png
+- 4/0001.png
+- 5/0002.png
+- 5/0004.png
+- 5/0009.png
+- 6/0001.png
+- 7/0002.png
+- 8/0008.png
+- 9/0009.png
+
+Some strokes were cut off, but the digits were still recognizable. I kept them because I want to include imperfect handwriting too. Later I can check whether edge-touching drawings are harder for the classifier.
+
+I decided to keep the original PNGs in Git while the dataset is small so someone else can use the same samples to repeat my experiments. Processed images will stay separate from the originals.
+
+I installed Pillow in the project's virtual environment.
+
+These samples are all my handwriting. I can start building preprocessing with them, but I still need other writers to test whether the classifier recognizes handwriting it has not trained on.
+
+Next I want to see how the same drawings look at 8x8 and 16x16. I have not chosen the classifier yet.
