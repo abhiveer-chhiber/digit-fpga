@@ -517,3 +517,26 @@ I also wrote a dataset loader that converts processed pixels to values from 0 to
 I checked the input shapes, pixel ranges, label counts, and sample assignments. All checks passed.
 
 This is still a same-writer validation split. It does not tell me how well the model handles other people's handwriting. There are only 20 validation samples, so one mistake changes accuracy by 5 percentage points.
+
+## 2026-10-05 - First Learning Baseline
+
+I wrote a linear softmax classifier using NumPy. This is a starting point to compare against the deeper models later.
+
+Training adjusts the pixel weights and biases using cross-entropy loss and gradient descent. I used 1,000 epochs, a learning rate of 0.1, and L2 regularization of 0.001.
+
+The script saves the settings, loss and accuracy after every epoch, checkpoints every 50 epochs including the starting model, and the final validation predictions. These files can also supply real training progress for the website.
+
+Final results on writer01-v1:
+
+| Resolution | Training correct | Validation correct | Validation loss |
+| --- | --- | --- | --- |
+| 8x8 | 79/80 | 19/20 | 0.5076 |
+| 16x16 | 80/80 | 18/20 | 0.3600 |
+
+Both models missed 3/0006.png. The 8x8 model predicted 4 and the 16x16 model predicted 9. The 16x16 model also predicted 6 for 8/0002.png.
+
+The 16x16 model had lower validation loss but one more wrong prediction. I cannot choose a winning resolution from just these 20 validation samples.
+
+I checked the weight and bias gradients against numerical estimates. The largest absolute difference was about 1.91e-11.
+
+Training results stay under experiments/results/, which is ignored by Git. The script can recreate these runs using the saved split and pinned dependencies.
