@@ -489,3 +489,19 @@ I installed Pillow in the project's virtual environment.
 These samples are all my handwriting. I can start building preprocessing with them, but I still need other writers to test whether the classifier recognizes handwriting it has not trained on.
 
 Next I want to see how the same drawings look at 8x8 and 16x16. I have not chosen the classifier yet.
+
+## 2026-10-05 - First Preprocessing Version
+
+I wrote src/data/preprocess.py to make 8x8 and 16x16 versions of the same original drawings.
+
+The script finds the digit using an ink threshold of 32, crops the surrounding whitespace, and centers the crop in a square. The longest side of the digit takes up about 75% of that square, leaving padding around it. It keeps the original proportions instead of stretching narrow digits.
+
+I used BOX resizing to keep average ink intensity when shrinking the images. Background pixels are 0 and ink pixels go up to 255. The threshold is only used to find the crop, so the processed images still keep grayscale values.
+
+The script also creates a CSV with the original and processed paths, writer, label, crop bounds, and whether the original touches an edge.
+
+It produced 100 images at each resolution. I checked their dimensions, grayscale format, labels, and counts against the CSV. All checks passed, and the original files were unchanged.
+
+I looked at one sample of each digit at both resolutions. The 16x16 versions kept more detail, especially the loops in 6 and 8. I still need to compare recognition accuracy before deciding which resolution to use.
+
+Generated data is already ignored by Git. It can be recreated by running the preprocessing script.
