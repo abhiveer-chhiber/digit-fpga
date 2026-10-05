@@ -540,3 +540,21 @@ The 16x16 model had lower validation loss but one more wrong prediction. I canno
 I checked the weight and bias gradients against numerical estimates. The largest absolute difference was about 1.91e-11.
 
 Training results stay under experiments/results/, which is ignored by Git. The script can recreate these runs using the saved split and pinned dependencies.
+
+## 2026-10-05 - First Neural Network
+
+I built a configurable neural network in NumPy with two hidden layers. The first run uses 256 inputs, hidden layers of 128 and 64 neurons, and 10 outputs. It has 41,802 trainable parameters.
+
+Hidden layers use ReLU. The output uses softmax probabilities with cross-entropy loss. I wrote the forward pass and backpropagation, then checked every weight and bias gradient on a small test network against numerical estimates. The largest difference was about 1.33e-11.
+
+I trained it using Adam, batches of 16, a learning rate of 0.001, and L2 regularization of 0.001. The run saves its settings, metrics after every epoch, and model checkpoints every 100 epochs.
+
+It reached 100% training accuracy. Validation accuracy reached 95% during training and ended at 90%. The final validation loss was 0.1408.
+
+At epoch 1000, it predicted 8 for 5/0002.png and 6 for 8/0002.png. The 5 touches the canvas edge, but one mistake is not enough to say that edge contact caused it.
+
+I loaded the final checkpoint and confirmed that it reproduced the recorded validation loss and accuracy.
+
+This network did not beat the 8x8 linear baseline's final accuracy on this split. I need more data and broader comparisons before making claims about which model works best.
+
+The model exposes activations, values before activation, and gradients. I want to use these real calculations in the website's network visualization.
