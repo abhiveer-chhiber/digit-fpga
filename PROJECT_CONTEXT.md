@@ -572,3 +572,19 @@ The model exposes activations, values before activation, and gradients. I want t
 - I have not implemented FPGA inference yet.
 
 Next: publish the drawing update, collect more handwriting, and investigate errors before increasing model complexity.
+
+## 2026-10-05 — Website pages and deployment maintenance
+
+- I separated the website into Explorer, The project, How it works, and Results.
+- I changed the website to scientific, third-person wording and kept my GitHub README in first person.
+- I removed personal biography and high school references from the website.
+- I added vertical navigation on the left and a consistent dark, teal, and amber palette.
+- I replaced the fade with a left-to-right page wipe and disabled transitions for reduced-motion settings.
+- I rebuilt the website and pushed the page update.
+- I updated the Pages actions after GitHub reported Node.js 20 deprecation warnings. The latest deployment still needs final confirmation.
+
+Next session:
+- Test phone layouts and replace the narrow-screen fixed rail with a collapsible vertical menu.
+- Check touch drawing, readable controls, charts, tables, and horizontal overflow.
+- Investigate recognition errors and collect more handwriting.
+- Revisit the requested development-time estimates for the README, clearly labeled as estimates rather than logged hours.
