@@ -12,6 +12,7 @@ VIEWER_FILES = (
     "interface/learn.css",
     "interface/learn.js",
     "interface/network_math.js",
+    "interface/drawing_input.js",
 )
 
 

@@ -1,4 +1,5 @@
 import { forward, backward, verifyExport } from "./network_math.js";
+import { preprocessDrawing } from "./drawing_input.js";
 
 const $ = id => document.getElementById(id);
 const canvas = $("network");
@@ -6,6 +7,9 @@ const ctx = canvas.getContext("2d");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 let data, result, gradients;
+let customSample = null;
+const currentSample = () => $("input-mode").value === "drawing"
+    ? customSample : data.samples[sampleIndex];
 let nodes = [], layers = [], edges = [], projected = [];
 let checkpointIndex = 0, sampleIndex = 0;
 let selectedNeuron = { layer: 1, index: 0 };
@@ -90,7 +94,8 @@ function inspectNeuron() {
         values.push(
             ["Weighted sum + bias", format(result.preactivations[layer - 1][index])],
             ["Bias", format(snapshot().biases[layer - 1][index])],
-            ["∂ loss / ∂ weighted sum", format(gradients[layer - 1][index])]
+            ["∂ loss / ∂ weighted sum", gradients
+                ? format(gradients[layer - 1][index]) : "Select a digit label"]
         );
     }
     if (layer === data.config.dimensions.length - 1) {
@@ -108,27 +113,32 @@ function inspectNeuron() {
 }
 
 function drawInput() {
-    const sample = data.samples[sampleIndex];
+    const sample = currentSample();
     const resolution = data.config.resolution;
     const image = $("pixels");
     image.width = image.height = resolution;
     const context = image.getContext("2d");
+
     sample.pixels.forEach((value, index) => {
         const shade = Math.round((1 - value) * 255);
         context.fillStyle = `rgb(${shade},${shade},${shade})`;
         context.fillRect(index % resolution, Math.floor(index / resolution), 1, 1);
     });
-    $("original").src = `../${sample.path}`;
-    $("original").alt = `Original handwritten ${sample.label}`;
-    $("sample-path").textContent =
-        `Original → ${resolution}×${resolution} input · ${sample.path}`;
+
+    $("original").src = sample.original || `../${sample.path}`;
+    $("original").alt = sample.original
+        ? "Your submitted drawing" : `Original handwritten ${sample.label}`;
+    $("sample-path").textContent = sample.original
+        ? `Your drawing → ${resolution}×${resolution} input · processed in this browser`
+        : `Original → ${resolution}×${resolution} input · ${sample.path}`;
 }
 
 function showPrediction() {
-    const label = data.samples[sampleIndex].label;
-    $("prediction").textContent =
-        `Predicted ${result.prediction} · ${result.prediction === label
-            ? "correct" : `actual ${label}`}`;
+    const label = currentSample().label;
+    const verdict = label === null ? ""
+        : result.prediction === label ? " · correct" : ` · actual ${label}`;
+    $("prediction").textContent = `Predicted ${result.prediction}${verdict}`;
+
     $("probabilities").replaceChildren();
     result.probabilities.forEach((probability, digit) => {
         const row = document.createElement("div");
@@ -209,25 +219,50 @@ function drawChart(id, trainKey, validationKey, accuracy) {
 }
 
 function updateCalculation() {
-    const sample = data.samples[sampleIndex];
-    result = forward(sample.pixels, snapshot());
-    gradients = backward(result, sample.label, snapshot());
-    const reference = snapshot().probabilities[sampleIndex];
-    const error = Math.max(
-        ...result.probabilities.map((value, i) => Math.abs(value - reference[i]))
-    );
-    if (error > 1e-8) throw new Error("Prediction differs from Python reference");
+    const sample = currentSample();
+    const inspection = document.querySelector(".inspection");
 
-    buildEdges();
-    drawInput();
-    showPrediction();
-    inspectNeuron();
     $("timeline").value = checkpointIndex;
     const metrics = data.history.find(row => row.epoch === snapshot().epoch);
     $("epoch").textContent =
         `Epoch ${snapshot().epoch} · train ${(metrics.train_accuracy * 100).toFixed(1)}% · validation ${(metrics.validation_accuracy * 100).toFixed(1)}%`;
     drawChart("loss-chart", "train_loss", "validation_loss", false);
     drawChart("accuracy-chart", "train_accuracy", "validation_accuracy", true);
+
+    if (!sample) {
+        result = null;
+        gradients = null;
+        inspection.hidden = true;
+        drawNetwork();
+        $("phase").textContent = "Draw a digit, then select Predict drawing";
+        return;
+    }
+
+    result = forward(sample.pixels, snapshot());
+    gradients = sample.label === null
+        ? null : backward(result, sample.label, snapshot());
+
+    if ($("input-mode").value === "validation") {
+        const reference = snapshot().probabilities[sampleIndex];
+        const error = Math.max(
+            ...result.probabilities.map((value, i) => Math.abs(value - reference[i]))
+        );
+        if (error > 1e-8) {
+            throw new Error("Prediction differs from Python reference");
+        }
+    }
+
+    document.querySelector(".replay .technical-note").textContent =
+        "Values come from saved checkpoints. Moving signals illustrate calculation order, not hardware timing. "
+        + (gradients
+            ? "The backward view shows this drawing's loss gradients; replay does not update weights."
+            : "Select a digit label to inspect loss gradients. This drawing uses forward calculations only.");
+
+    inspection.hidden = false;
+    buildEdges();
+    drawInput();
+    showPrediction();
+    inspectNeuron();
     drawNetwork();
 }
 
@@ -247,10 +282,11 @@ function project(node) {
 }
 
 function drawNetwork() {
-    if (!result) return;
     ctx.clearRect(0, 0, width, height);
-    const backwardPhase = phase >= 0.58;
-    const progress = backwardPhase ? (phase - 0.58) / 0.42 : phase / 0.58;
+    if (!result) return;
+    const backwardPhase = phase >= 0.58 && gradients !== null;
+    const progress = gradients === null ? phase
+        : backwardPhase ? (phase - 0.58) / 0.42 : phase / 0.58;
     $("phase").textContent = backwardPhase
         ? "Backward view · single-drawing loss gradients ←"
         : "Forward view · neuron activations →";
@@ -460,6 +496,145 @@ function resize() {
 new ResizeObserver(resize).observe(canvas);
 window.addEventListener("resize", resize);
 
+
+function setupDrawing() {
+    const drawing = $("draw-canvas");
+    const pen = drawing.getContext("2d");
+    let stroke = null;
+
+    function message(value, error = false) {
+        $("drawing-status").textContent = value;
+        $("drawing-status").classList.toggle("error", error);
+    }
+
+    function resetCanvas() {
+        pen.fillStyle = "white";
+        pen.fillRect(0, 0, drawing.width, drawing.height);
+        stroke = null;
+    }
+
+    function point(event) {
+        const box = drawing.getBoundingClientRect();
+        return {
+            x: Math.max(0, Math.min(128,
+                (event.clientX - box.left) * drawing.width / box.width)),
+            y: Math.max(0, Math.min(128,
+                (event.clientY - box.top) * drawing.height / box.height)),
+        };
+    }
+
+    function drawSegment(from, to) {
+        pen.strokeStyle = "black";
+        pen.lineWidth = 7;
+        pen.lineCap = "round";
+        pen.lineJoin = "round";
+        pen.beginPath();
+        pen.moveTo(from.x, from.y);
+        pen.lineTo(to.x, to.y);
+        pen.stroke();
+    }
+
+    function label() {
+        const value = $("drawing-label").value;
+        return value === "" ? null : Number(value);
+    }
+
+    resetCanvas();
+
+    $("input-mode").addEventListener("change", () => {
+        if (!data) return;
+        stopPlayback();
+        phase = 0;
+        const drawingMode = $("input-mode").value === "drawing";
+        $("draw-panel").hidden = !drawingMode;
+        $("sample-control").hidden = drawingMode;
+        if (drawingMode) checkpointIndex = data.snapshots.length - 1;
+        updateCalculation();
+    });
+
+    drawing.addEventListener("pointerdown", event => {
+        if (!data || stroke || (event.pointerType === "mouse" && event.button !== 0)) {
+            return;
+        }
+        event.preventDefault();
+        stopPlayback();
+        phase = 0;
+        drawNetwork();
+        const start = point(event);
+        stroke = { ...start, pointerId: event.pointerId };
+        drawing.setPointerCapture(event.pointerId);
+        pen.fillStyle = "black";
+        pen.beginPath();
+        pen.arc(start.x, start.y, 3.5, 0, Math.PI * 2);
+        pen.fill();
+        message(customSample
+            ? "Drawing changed. Select Predict drawing to update the displayed result."
+            : "Select Predict drawing when you finish.");
+    });
+
+    drawing.addEventListener("pointermove", event => {
+        if (!stroke || stroke.pointerId !== event.pointerId) return;
+        event.preventDefault();
+        const next = point(event);
+        drawSegment(stroke, next);
+        stroke = { ...next, pointerId: event.pointerId };
+    });
+
+    function finishStroke(event) {
+        if (!stroke || stroke.pointerId !== event.pointerId) return;
+        if (event.type === "pointerup") drawSegment(stroke, point(event));
+        stroke = null;
+        if (drawing.hasPointerCapture(event.pointerId)) {
+            drawing.releasePointerCapture(event.pointerId);
+        }
+    }
+
+    drawing.addEventListener("pointerup", finishStroke);
+    drawing.addEventListener("pointercancel", finishStroke);
+    drawing.addEventListener("lostpointercapture", () => { stroke = null; });
+
+    $("predict-drawing").addEventListener("click", () => {
+        if (!data || stroke) return;
+        try {
+            const prepared = preprocessDrawing(
+                pen.getImageData(0, 0, drawing.width, drawing.height),
+                data.config.resolution
+            );
+            customSample = {
+                pixels: prepared.pixels,
+                label: label(),
+                original: drawing.toDataURL("image/png"),
+            };
+            stopPlayback();
+            phase = 0;
+            updateCalculation();
+            message(
+                `Predicted using epoch ${snapshot().epoch}. `
+                + (prepared.edgeTouching ? "Ink touches the canvas edge. " : "")
+                + "Move the checkpoint slider to compare saved models."
+            );
+        } catch (error) {
+            message(error.message, true);
+        }
+    });
+
+    $("clear-drawing").addEventListener("click", () => {
+        resetCanvas();
+        customSample = null;
+        $("drawing-label").value = "";
+        stopPlayback();
+        phase = 0;
+        if (data) updateCalculation();
+        message("Draw a digit, then select Predict drawing.");
+    });
+
+    $("drawing-label").addEventListener("change", () => {
+        if (!data || !customSample) return;
+        customSample.label = label();
+        updateCalculation();
+    });
+}
+
 async function initialize() {
     try {
         const response = await fetch("../experiments/results/network-view.json");
@@ -492,4 +667,5 @@ async function initialize() {
     }
 }
 
+setupDrawing();
 initialize();

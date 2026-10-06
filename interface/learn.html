@@ -38,7 +38,13 @@
 
     <div id="viewer" hidden>
         <div class="toolbar">
-            <label>Validation drawing
+            <label>Input
+                <select id="input-mode">
+                    <option value="validation">My validation drawings</option>
+                    <option value="drawing">Draw your own digit</option>
+                </select>
+            </label>
+            <label id="sample-control">Validation drawing
                 <select id="sample"></select>
             </label>
             <label>Camera
@@ -76,6 +82,48 @@
                 Moving signals illustrate calculation order, not hardware timing.
                 The backward view shows the selected drawing's loss gradients.</p>
         </div>
+
+
+        <section id="draw-panel" class="draw-panel" hidden
+            aria-labelledby="draw-heading">
+            <div class="draw-copy">
+                <p class="eyebrow">Try my model</p>
+                <h2 id="draw-heading">What does your handwriting look like to it?</h2>
+                <p>Draw one digit from 0–9. I use the same crop, padding,
+                    and pixel scaling as my training pipeline.</p>
+                <p class="technical-note">Your drawing stays in this browser.
+                    Predicting does not retrain the model.
+                    The checkpoint slider lets you compare its saved weights.</p>
+            </div>
+            <div class="draw-workspace">
+                <canvas id="draw-canvas" width="128" height="128"
+                    aria-label="Draw a handwritten digit using a mouse, touch, or pen"></canvas>
+                <div class="draw-actions">
+                    <button id="predict-drawing" type="button">Predict drawing</button>
+                    <button id="clear-drawing" type="button">Clear</button>
+                </div>
+                <label for="drawing-label">Optional: which digit did you draw?
+                    <select id="drawing-label">
+                        <option value="">No label selected</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                    </select>
+                </label>
+                <p class="technical-note">A label lets me show correctness and
+                    loss gradients. It is not an input to the prediction.</p>
+                <p id="drawing-status" class="technical-note" role="status">
+                    Draw a digit, then select Predict drawing.
+                </p>
+            </div>
+        </section>
 
         <div class="inspection">
             <div class="drawing">

@@ -250,3 +250,46 @@ footer a { white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
 }
+
+
+/* Browser drawing experiment */
+.draw-panel {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 48px;
+    padding: 30px 0;
+    margin-top: 25px;
+    border-top: 1px solid var(--line);
+}
+.draw-copy { max-width: 480px; }
+.draw-copy h2 {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: clamp(30px, 3.4vw, 42px);
+    font-weight: 400;
+    line-height: 1.1;
+}
+.draw-copy p { color: var(--muted); }
+.draw-workspace { max-width: 320px; }
+#draw-canvas {
+    display: block;
+    width: 256px;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: crosshair;
+    touch-action: none;
+}
+.draw-actions { display: flex; gap: 12px; margin: 14px 0 20px; }
+#predict-drawing {
+    background: #d6eee7;
+    color: #172922;
+    border-color: #d6eee7;
+}
+#drawing-status { color: var(--teal); margin-top: 14px; }
+#drawing-status.error { color: #ffb095; }
+@media (max-width: 700px) {
+    .draw-panel { grid-template-columns: 1fr; gap: 20px; }
+}

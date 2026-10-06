@@ -558,3 +558,17 @@ I loaded the final checkpoint and confirmed that it reproduced the recorded vali
 This network did not beat the 8x8 linear baseline's final accuracy on this split. I need more data and broader comparisons before making claims about which model works best.
 
 The model exposes activations, values before activation, and gradients. I want to use these real calculations in the website's network visualization.
+
+## 2026-10-05 — Website and browser drawing input
+
+- I published the learning explorer through GitHub Pages.
+- I included the actual saved model weights, 11 training checkpoints, and 20 validation drawings.
+- I added a note explaining that I collected the 100-drawing dataset myself.
+- I added browser drawing input with threshold-based cropping, proportional padding, BOX resizing, and normalized pixels.
+- I connected submitted drawings to the predictions, neuron inspection, and checkpoint replay.
+- I made labels optional. A label enables correctness checks and loss gradients without changing the prediction inputs.
+- I kept visitor drawings in the browser. Prediction and replay do not retrain the model or add drawings to my dataset.
+- I tested the drawing controls locally. An 8 I drew was predicted as 5 at epoch 1000, so recognition on new drawings still needs improvement.
+- I have not implemented FPGA inference yet.
+
+Next: publish the drawing update, collect more handwriting, and investigate errors before increasing model complexity.
