@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>How it works · Digit / FPGA</title>
+    <link rel="stylesheet" href="learn.css">
+
+</head>
+<body class="paper-page">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <nav aria-label="Main navigation">
+        <a href="learn.html">Explorer</a>
+        <a href="project.html">The project</a>
+        <a href="methods.html" aria-current="page">How it works</a>
+        <a href="results.html">Results</a>
+    </nav>
+</header>
+
+<main id="main-content">
+<section id="decisions" class="decisions">
+    <p class="eyebrow">From drawing to prediction</p>
+    <h1>Method and implementation.</h1>
+
+    <article class="decision">
+        <div><span class="step">01 / DATA</span><h3>Keep the original.</h3></div>
+        <div>
+            <p>Original drawings were collected at 128×128. Both experimental
+                resolutions were generated from the same source images.
+                This controls for differences in handwriting when comparing resolution.</p>
+            <pre><code>original: 128 × 128
+experiment A: 8 × 8 = 64 inputs
+experiment B: 16 × 16 = 256 inputs</code></pre>
+            <p>Writer identifiers support future evaluation with writers excluded
+                from training. The current dataset contains 100 drawings from one writer.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">02 / PREPROCESSING</span><h3>Center without stretching.</h3></div>
+        <div>
+            <p>The script crops unused space and places the drawing in a padded square.
+                It preserves proportions, so a narrow 1 does not become a wide rectangle.
+                BOX resizing averages ink intensity instead of forcing pixels to black or white.</p>
+            <pre><code>pixels = np.asarray(image, dtype=np.float32) / 255.0</code></pre>
+            <p>Dividing by 255 changes the pixel range to 0–1. It does not change the
+                handwriting or tell the model which digit it is.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">03 / VALIDATION</span><h3>Hold some drawings back.</h3></div>
+        <div>
+            <p>A fixed split assigns 80 drawings to training and 20 to validation.
+                Both resolutions use identical assignments. Validation labels are
+                excluded from parameter updates during training.</p>
+            <p>Validation supports model comparison but does not constitute an
+                untouched final test set. With 20 validation samples, one prediction
+                changes accuracy by five percentage points.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">04 / FORWARD PASS</span><h3>A neuron combines numbers.</h3></div>
+        <div>
+            <p>Each neuron multiplies its inputs by weights, adds them together,
+                and adds a bias. Hidden layers then use ReLU, which replaces negative
+                values with zero.</p>
+            <pre><code>values = activations[-1] @ weights + bias
+values = np.maximum(values, 0)</code></pre>
+            <p>Without a nonlinear activation between layers, stacking linear layers
+                would still describe a linear transformation. ReLU lets the network
+                represent more complex relationships.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">05 / LEARNING</span><h3>Work backward from the mistake.</h3></div>
+        <div>
+            <p>Cross-entropy measures how much probability the model gives the correct
+                label. Backpropagation uses the chain rule to find how each parameter
+                affects that loss.</p>
+            <pre><code>delta = probabilities - targets
+weight_gradient = previous_activations.T @ delta</code></pre>
+            <p>Training averages gradients across a batch and adds L2 regularization.
+                Adam uses moving averages of gradients and squared gradients to choose
+                parameter updates. It does not replace backpropagation.</p>
+            <p>Analytical gradients were checked against numerical estimates on a
+                small test network before training. The largest absolute difference
+                was approximately 1.33e-11.</p>
+        </div>
+    </article>
+</section>
+</main>
+
+<footer>
+    <span>DIGIT / FPGA · Model, data, and implementation</span>
+    <a href="https://github.com/abhiveer-chhiber/digit-fpga">Code and project notes ↗</a>
+</footer>
+</body>
+</html>

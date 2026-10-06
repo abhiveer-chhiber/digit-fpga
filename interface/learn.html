@@ -3,31 +3,33 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inside the Network · Abhiveer's FPGA Project</title>
+    <title>Explorer · Digit / FPGA</title>
     <link rel="stylesheet" href="learn.css">
     <script type="module" src="learn.js"></script>
 </head>
-<body>
+<body class="explorer-page">
+<a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header">
-    <a class="wordmark" href="#explorer">DIGIT / FPGA</a>
+    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
     <nav aria-label="Main navigation">
-        <a href="#story">The project</a>
-        <a href="#decisions">How it works</a>
-        <a href="#results">Results</a>
+        <a href="learn.html" aria-current="page">Explorer</a>
+        <a href="project.html">The project</a>
+        <a href="methods.html">How it works</a>
+        <a href="results.html">Results</a>
     </nav>
 </header>
 
-<main>
+<main id="main-content">
 <section id="explorer" class="explorer">
     <div class="section-heading">
         <div>
-            <p class="eyebrow">A high school engineering project</p>
-            <h1>See what learning changes.</h1>
+            <p class="eyebrow">Handwritten digit recognition</p>
+            <h1>Observe how a network learns.</h1>
 
 <p class="intro" id="model-provenance">
-    This is a real neural network trained on handwritten digits I collected myself.
-    My dataset contains 100 drawings: 80 for training and 20 for validation.
-    The visualization uses the model's saved weights and recorded training checkpoints.
+    This neural network uses a custom dataset of 100 handwritten digits
+    collected for this project. Eighty drawings were used for training and 20 for validation.
+    The visualization uses actual model weights and recorded training checkpoints.
 </p>
         </div>
         <p class="intro">Pick a drawing. Follow it through the network.
@@ -40,7 +42,7 @@
         <div class="toolbar">
             <label>Input
                 <select id="input-mode">
-                    <option value="validation">My validation drawings</option>
+                    <option value="validation">Validation drawings</option>
                     <option value="drawing">Draw your own digit</option>
                 </select>
             </label>
@@ -87,13 +89,14 @@
         <section id="draw-panel" class="draw-panel" hidden
             aria-labelledby="draw-heading">
             <div class="draw-copy">
-                <p class="eyebrow">Try my model</p>
-                <h2 id="draw-heading">What does your handwriting look like to it?</h2>
-                <p>Draw one digit from 0–9. I use the same crop, padding,
-                    and pixel scaling as my training pipeline.</p>
-                <p class="technical-note">Your drawing stays in this browser.
-                    Predicting does not retrain the model.
-                    The checkpoint slider lets you compare its saved weights.</p>
+                <p class="eyebrow">Interactive inference</p>
+                <h2 id="draw-heading">Evaluate a new drawing.</h2>
+                <p>Draw one digit from 0–9. The input follows the training pipeline:
+                    threshold-based cropping, proportional padding, BOX resizing,
+                    and pixel normalization.</p>
+                <p class="technical-note">Drawings are processed locally in the browser.
+                    Inference does not update model weights.
+                    The checkpoint slider selects recorded parameter states.</p>
             </div>
             <div class="draw-workspace">
                 <canvas id="draw-canvas" width="128" height="128"
@@ -102,7 +105,7 @@
                     <button id="predict-drawing" type="button">Predict drawing</button>
                     <button id="clear-drawing" type="button">Clear</button>
                 </div>
-                <label for="drawing-label">Optional: which digit did you draw?
+                <label for="drawing-label">Optional target digit
                     <select id="drawing-label">
                         <option value="">No label selected</option>
                         <option value="0">0</option>
@@ -117,8 +120,8 @@
                         <option value="9">9</option>
                     </select>
                 </label>
-                <p class="technical-note">A label lets me show correctness and
-                    loss gradients. It is not an input to the prediction.</p>
+                <p class="technical-note">A target label enables correctness checks and
+                    cross-entropy gradients. The label is not used as a prediction input.</p>
                 <p id="drawing-status" class="technical-note" role="status">
                     Draw a digit, then select Predict drawing.
                 </p>
@@ -163,118 +166,10 @@
         </div>
     </div>
 </section>
-
-<section id="story" class="story">
-    <p class="eyebrow">Why I started</p>
-    <h2>I wanted to follow a prediction<br>all the way down to hardware.</h2>
-    <div class="story-copy">
-        <p>I started this project in high school because I wanted to understand
-            how a model learns, then work out how its calculations could run on an FPGA.</p>
-        <p>I drew my own digits, built the collector, and kept the original images.
-            Then I compared resolutions, trained a simple baseline, and built a neural
-            network in NumPy.</p>
-        <p>This page shows the software stage. FPGA inference is still ahead.
-            The browser currently performs the model calculations using exported weights.</p>
-    </div>
-</section>
-
-<section id="decisions" class="decisions">
-    <p class="eyebrow">From drawing to prediction</p>
-    <h2>The choices behind the code.</h2>
-
-    <article class="decision">
-        <div><span class="step">01 / DATA</span><h3>Keep the original.</h3></div>
-        <div>
-            <p>I captured drawings at 128×128 so I could make smaller versions
-                from the same handwriting. Collecting separate drawings for each
-                resolution would make the comparison harder to interpret.</p>
-            <pre><code>original: 128 × 128
-experiment A: 8 × 8 = 64 inputs
-experiment B: 16 × 16 = 256 inputs</code></pre>
-            <p>Writer IDs let me later separate people between training and testing.
-                Right now, all 100 drawings are from one writer.</p>
-        </div>
-    </article>
-
-    <article class="decision">
-        <div><span class="step">02 / PREPROCESSING</span><h3>Center without stretching.</h3></div>
-        <div>
-            <p>The script crops unused space and places the drawing in a padded square.
-                It preserves proportions, so a narrow 1 does not become a wide rectangle.
-                BOX resizing averages ink intensity instead of forcing pixels to black or white.</p>
-            <pre><code>pixels = np.asarray(image, dtype=np.float32) / 255.0</code></pre>
-            <p>Dividing by 255 changes the pixel range to 0–1. It does not change the
-                handwriting or tell the model which digit it is.</p>
-        </div>
-    </article>
-
-    <article class="decision">
-        <div><span class="step">03 / VALIDATION</span><h3>Hold some drawings back.</h3></div>
-        <div>
-            <p>I used 80 drawings for training and 20 for validation. Both resolutions
-                use the same assignments. The validation labels are not used to update
-                weights during training.</p>
-            <p>Validation helps me compare choices, but it is not an untouched final
-                test set. With only 20 drawings, one mistake changes accuracy by five
-                percentage points.</p>
-        </div>
-    </article>
-
-    <article class="decision">
-        <div><span class="step">04 / FORWARD PASS</span><h3>A neuron combines numbers.</h3></div>
-        <div>
-            <p>Each neuron multiplies its inputs by weights, adds them together,
-                and adds a bias. Hidden layers then use ReLU, which replaces negative
-                values with zero.</p>
-            <pre><code>values = activations[-1] @ weights + bias
-values = np.maximum(values, 0)</code></pre>
-            <p>Without a nonlinear activation between layers, stacking linear layers
-                would still describe a linear transformation. ReLU lets the network
-                represent more complex relationships.</p>
-        </div>
-    </article>
-
-    <article class="decision">
-        <div><span class="step">05 / LEARNING</span><h3>Work backward from the mistake.</h3></div>
-        <div>
-            <p>Cross-entropy measures how much probability the model gives the correct
-                label. Backpropagation uses the chain rule to find how each parameter
-                affects that loss.</p>
-            <pre><code>delta = probabilities - targets
-weight_gradient = previous_activations.T @ delta</code></pre>
-            <p>Training averages gradients across a batch and adds L2 regularization.
-                Adam uses moving averages of gradients and squared gradients to choose
-                parameter updates. It does not replace backpropagation.</p>
-            <p>I checked the gradients against numerical estimates before training.
-                The largest absolute difference on the test network was about 1.33e-11.</p>
-        </div>
-    </article>
-</section>
-
-<section id="results" class="results">
-    <p class="eyebrow">What the experiments showed</p>
-    <h2>A larger model did not automatically win.</h2>
-    <div class="table-wrap">
-        <table>
-            <caption>Final results on writer01-v1, the same 20 validation drawings</caption>
-            <thead><tr><th>Model</th><th>Training correct</th><th>Validation correct</th><th>Validation loss</th></tr></thead>
-            <tbody>
-                <tr><td>8×8 linear baseline</td><td>79 / 80</td><td>19 / 20</td><td>0.5076</td></tr>
-                <tr><td>16×16 linear baseline</td><td>80 / 80</td><td>18 / 20</td><td>0.3600</td></tr>
-                <tr><td>16×16 MLP, 128 → 64 hidden layers</td><td>80 / 80</td><td>18 / 20</td><td>0.1408</td></tr>
-            </tbody>
-        </table>
-    </div>
-    <p>The neural network reached 19/20 during training and ended at 18/20.
-        Lower loss and higher accuracy are different measures.
-        This small experiment does not establish which model generalizes best.</p>
-    <p>Next: more writers, broader model comparisons, fixed-point inference,
-        and an FPGA implementation verified against the software reference.</p>
-</section>
 </main>
 
 <footer>
-    <span>Built by Abhiveer Chhiber · An ongoing high school project</span>
+    <span>DIGIT / FPGA · Model, data, and implementation</span>
     <a href="https://github.com/abhiveer-chhiber/digit-fpga">Code and project notes ↗</a>
 </footer>
 </body>

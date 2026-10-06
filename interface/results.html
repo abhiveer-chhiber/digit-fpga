@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Results · Digit / FPGA</title>
+    <link rel="stylesheet" href="learn.css">
+
+</head>
+<body class="paper-page">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <nav aria-label="Main navigation">
+        <a href="learn.html">Explorer</a>
+        <a href="project.html">The project</a>
+        <a href="methods.html">How it works</a>
+        <a href="results.html" aria-current="page">Results</a>
+    </nav>
+</header>
+
+<main id="main-content">
+<section id="results" class="results">
+    <p class="eyebrow">What the experiments showed</p>
+    <h1>Experimental results.</h1>
+    <div class="table-wrap">
+        <table>
+            <caption>Final results on writer01-v1, the same 20 validation drawings</caption>
+            <thead><tr><th>Model</th><th>Training correct</th><th>Validation correct</th><th>Validation loss</th></tr></thead>
+            <tbody>
+                <tr><td>8×8 linear baseline</td><td>79 / 80</td><td>19 / 20</td><td>0.5076</td></tr>
+                <tr><td>16×16 linear baseline</td><td>80 / 80</td><td>18 / 20</td><td>0.3600</td></tr>
+                <tr><td>16×16 MLP, 128 → 64 hidden layers</td><td>80 / 80</td><td>18 / 20</td><td>0.1408</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p>The neural network reached 19/20 during training and ended at 18/20.
+        Lower loss and higher accuracy are different measures.
+        This small experiment does not establish which model generalizes best.</p>
+    <p>Further work includes additional writers, broader model comparisons,
+        fixed-point inference, and an FPGA implementation verified against
+        the software reference.</p>
+</section>
+</main>
+
+<footer>
+    <span>DIGIT / FPGA · Model, data, and implementation</span>
+    <a href="https://github.com/abhiveer-chhiber/digit-fpga">Code and project notes ↗</a>
+</footer>
+</body>
+</html>

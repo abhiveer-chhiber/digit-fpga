@@ -9,6 +9,9 @@ OUTPUT = ROOT / "build" / "site"
 
 VIEWER_FILES = (
     "interface/learn.html",
+    "interface/project.html",
+    "interface/methods.html",
+    "interface/results.html",
     "interface/learn.css",
     "interface/learn.js",
     "interface/network_math.js",
