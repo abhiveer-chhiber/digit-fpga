@@ -1,10 +1,10 @@
 # FPGA Handwritten Digit Recognition
 
-I am building a handwritten digit recognition system to learn how machine learning, numerical precision, and digital hardware work together. I have implemented the software model and published an interactive learning website. My next hardware goal is FPGA inference.
+I am building a handwritten digit recognition system to learn how machine learning, numerical precision, and digital hardware work together. I have implemented the software model and published an interactive display of the project. My next hardware goal is FPGA inference.
 
 **[Explore my model and its training](https://abhiveer-chhiber.github.io/digit-fpga/)**
 
-## Learning Website
+## Project Display
 
 I collected 100 handwritten digit drawings and trained a real neural network on 80 of them, holding out 20 for validation.
 

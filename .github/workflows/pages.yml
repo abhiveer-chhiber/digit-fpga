@@ -1,4 +1,4 @@
-name: Publish learning website
+name: Publish project website
 
 on:
   push:

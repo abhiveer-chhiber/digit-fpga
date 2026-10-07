@@ -1,4 +1,4 @@
-"""Package the learning website for static hosting."""
+"""Package the project website for static hosting."""
 
 import json
 import shutil
@@ -113,10 +113,10 @@ def build():
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="refresh" content="0; url=interface/learn.html">
-    <title>Digit / FPGA — Learning Explorer</title>
+    <title>Digit / FPGA — Project Display</title>
 </head>
 <body>
-    <p><a href="interface/learn.html">Open the learning explorer</a></p>
+    <p><a href="interface/learn.html">Open the project display</a></p>
 </body>
 </html>
 """,
