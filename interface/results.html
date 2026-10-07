@@ -54,9 +54,48 @@
     <p>Neural network validation accuracy reached 19/20 at earlier checkpoints and finished at 18/20.
         Lower loss and higher accuracy are different measures.
         This small experiment does not establish which model generalizes best.</p>
+    <section id="precision-results" aria-labelledby="precision-heading">
+        <p class="eyebrow">Integer inference</p>
+        <h2 id="precision-heading">Fixed-point results.</h2>
+        <p>The final neural network checkpoint was also evaluated using integer
+            calculations. All four formats cover about −32 to 32 and use
+            32-bit accumulators. The comparison changes fractional precision.</p>
+        <div class="table-wrap">
+            <table>
+                <caption>Checkpoint 1000 · 80 training and 20 validation drawings</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Storage / fractional bits</th>
+                        <th scope="col">Training correct</th>
+                        <th scope="col">Validation correct</th>
+                        <th scope="col">Validation agreement with float</th>
+                        <th scope="col">Maximum validation score error</th>
+                        <th scope="col">Saturation events</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- FIXED_POINT_ROWS -->
+                </tbody>
+            </table>
+        </div>
+        <p>The 16-bit and 12-bit formats preserved the original predictions on all
+            100 drawings. The 10-bit format corrected one validation prediction.
+            One changed prediction does not establish better performance on
+            other handwriting.</p>
+        <p>With two fractional bits, the 8-bit format rounded 32,703 of 32,768
+            first-layer weights to zero. Accuracy dropped without saturation.
+            This result applies to the tested scale, not every 8-bit model.</p>
+        <p>Agreement counts predictions matching the floating-point model.
+            Score error compares output values after converting integers back
+            to the original scale. Saturation events include both data splits.</p>
+        <p>The integer implementation matched a separate scalar reference in
+            150 generated test cases, including 66 with accumulator saturation.</p>
+        <p><a href="../docs/fixed-point-v1.json" download="fixed-point-v1.json">Download the experiment report (JSON)</a></p>
+        <p>These are Python simulation results. FPGA execution, timing, and
+            resource use have not been measured.</p>
+    </section>
     <p>Further work includes additional writers, broader model comparisons,
-        fixed-point inference, and an FPGA implementation verified against
-        the software reference.</p>
+        and an FPGA implementation checked against the software model.</p>
 </section>
 </main>
 

@@ -20,6 +20,36 @@ VIEWER_FILES = (
 )
 
 
+
+def fixed_point_rows(report):
+    if report["schema"] != 1 or report["accumulator_bits"] != 32:
+        raise ValueError("Unsupported fixed-point report")
+    expected = [(16, 10), (12, 6), (10, 4), (8, 2)]
+    formats = report["formats"]
+    if [(r["bits"], r["fractional_bits"]) for r in formats] != expected:
+        raise ValueError("Unexpected fixed-point formats")
+
+    rows = []
+    for result in formats:
+        train, val = result["train"], result["validation"]
+        if train["samples"] != 80 or val["samples"] != 20:
+            raise ValueError("Unexpected fixed-point sample counts")
+        saturations = (
+            train["total_saturation_events"] + val["total_saturation_events"]
+        )
+        rows.append(
+            "<tr>"
+            f"<th scope='row'>{result['bits']} / {result['fractional_bits']}</th>"
+            f"<td>{int(train['fixed_correct'])} / 80</td>"
+            f"<td>{int(val['fixed_correct'])} / 20</td>"
+            f"<td>{int(val['agreement_with_float'])} / 20</td>"
+            f"<td>{float(val['maximum_logit_error']):.6f}</td>"
+            f"<td>{int(saturations)}</td>"
+            "</tr>"
+        )
+    return "\n".join(rows)
+
+
 def build():
     snapshot = ROOT / "site_assets/network-view.json"
     data = json.loads(snapshot.read_text())
@@ -32,6 +62,17 @@ def build():
         snapshot,
         Path("experiments/results/network-view.json"),
     ))
+
+    report_path = ROOT / "docs/fixed-point-v1.json"
+    report = json.loads(report_path.read_text())
+    precision_rows = fixed_point_rows(report)
+    results_source = (ROOT / "interface/results.html").read_text()
+    if results_source.count("<!-- FIXED_POINT_ROWS -->") != 1:
+        raise ValueError("Expected one fixed-point table marker")
+    results_html = results_source.replace(
+        "<!-- FIXED_POINT_ROWS -->", precision_rows
+    )
+    copies.append((report_path, Path("docs/fixed-point-v1.json")))
 
     sample_paths = set()
     for sample in data["samples"]:
@@ -60,6 +101,10 @@ def build():
         destination = OUTPUT / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, destination)
+
+    (OUTPUT / "interface/results.html").write_text(
+        results_html, encoding="utf-8"
+    )
 
     (OUTPUT / "index.html").write_text(
         """<!doctype html>
