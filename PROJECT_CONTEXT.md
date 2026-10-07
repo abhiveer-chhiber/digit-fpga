@@ -598,3 +598,38 @@ I adjusted spacing, controls, drawing input, and content layouts for narrow scre
 I checked navigation and page scrolling at a 390px viewport in Chrome device emulation. At 320px, I also checked drawing predictions and training replay. I then returned to desktop and confirmed that the sidebar and network layout still worked. Testing on a physical phone is still pending.
 
 The website build passed with 11 recorded checkpoints and 20 original validation drawings.
+
+## 2026-10-07 — Fixed-point inference
+
+I added a version of my model that uses integers for its prediction calculations. Each integer has a scale that tells me what value it represents. With 10 fractional bits, an integer of 1024 represents 1.0.
+
+I used 32-bit accumulators to add the products in each neuron. Multiplying two scaled values doubles the number of fractional bits, so I store biases at that same scale before adding them.
+
+I round to the nearest value, with halfway values rounded away from zero. If a result goes past the allowed range, I clip it to the nearest limit. This is called saturation. The code counts when this happens.
+
+I checked that the original checkpoint still gave 18/20 correct validation predictions and a loss of 0.140806. Then I compared four integer formats.
+
+| Storage bits | Fractional bits | Training correct | Validation correct | Same validation prediction as float | Saturation events |
+| --- | --- | --- | --- | --- | --- |
+| 16 | 10 | 80 / 80 | 18 / 20 | 20 / 20 | 0 |
+| 12 | 6 | 80 / 80 | 18 / 20 | 20 / 20 | 0 |
+| 10 | 4 | 80 / 80 | 19 / 20 | 19 / 20 | 0 |
+| 8 | 2 | 11 / 80 | 3 / 20 | 3 / 20 | 0 |
+
+All four formats cover about -32 to 32. I kept that range similar so I could compare how much fractional precision the model needs.
+
+The 16-bit and 12-bit versions gave the same predictions as the original model on all 100 drawings.
+
+The 10-bit version changed one validation prediction from 6 to the correct digit, 8. That brought it to 19/20, but one changed prediction is not enough to say it is a better model.
+
+The 8-bit version had a step size of 0.25. It rounded 32,703 of the 32,768 first-layer weights to zero, and its accuracy dropped. There was no saturation in any of these runs. This result applies to this particular scale, not every 8-bit model.
+
+I checked the code against a separate version that calculates each neuron one step at a time using Python integers. All layer outputs matched in 150 generated test cases. Of those, 66 tested accumulator saturation. I also checked rounding, bias scaling, ReLU, and negative outputs.
+
+I saved the full results in `docs/fixed-point-v1.json`.
+
+Verification command: `.venv/bin/python src/fixed_point/verify.py`
+
+New comparison command: `.venv/bin/python src/fixed_point/evaluate.py --name fixed-point-v2`
+
+I tested these calculations in Python. I have not run them on an FPGA yet.
