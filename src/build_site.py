@@ -11,6 +11,7 @@ VIEWER_FILES = (
     "interface/learn.html",
     "interface/navigation.js",
     "interface/project.html",
+    "interface/overview.html",
     "interface/methods.html",
     "interface/results.html",
     "interface/learn.css",

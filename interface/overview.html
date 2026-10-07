@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Overview · Digit / FPGA</title>
+    <link rel="stylesheet" href="learn.css">
+    <script type="module" src="navigation.js"></script>
+
+</head>
+<body class="paper-page">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <nav aria-label="Main navigation">
+        <a href="learn.html">Explorer</a>
+        <a href="overview.html" aria-current="page">Overview</a>
+        <a href="project.html">The project</a>
+        <a href="methods.html">How it works</a>
+        <a href="results.html">Results</a>
+    </nav>
+</header>
+
+
+<div class="mobile-bar">
+    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <button id="mobile-menu-open" type="button"
+        aria-haspopup="dialog" aria-controls="mobile-menu"
+        aria-expanded="false">Menu</button>
+</div>
+
+<dialog id="mobile-menu" aria-labelledby="mobile-menu-title">
+    <div class="mobile-menu-heading">
+        <h2 id="mobile-menu-title">Navigation</h2>
+        <button id="mobile-menu-close" type="button" autofocus>Close</button>
+    </div>
+    <nav id="mobile-navigation" aria-label="Main navigation"></nav>
+</dialog>
+
+<main id="main-content">
+<section class="overview" aria-labelledby="overview-heading">
+    <p class="eyebrow">Project overview</p>
+    <h1 id="overview-heading">Recognizing a handwritten digit.</h1>
+    <p class="overview-intro">This project trains a neural network to recognize
+        drawings of digits from 0 to 9. The website shows its predictions,
+        saved training progress, and the calculations inside the network.
+        The next goal is to run those prediction calculations on an FPGA.</p>
+
+    <section class="overview-section">
+        <h2>What happens to a drawing?</h2>
+        <div>
+            <ol>
+                <li>A drawing is cropped, centered, and resized to a 16 × 16 image.</li>
+                <li>Its 256 pixels become numbers passed into the neural network.</li>
+                <li>The network combines those numbers using weights learned during training.</li>
+                <li>It produces a score for each digit and selects the highest one.</li>
+            </ol>
+            <p>Visitors can draw a digit in the Explorer or choose a saved drawing.
+                New drawings are processed in the browser and do not retrain the model.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>What works now?</h2>
+        <div>
+            <p>The project includes a drawing collector, image processing,
+                models written in Python with NumPy, and this interactive website.</p>
+            <p>The dataset contains 100 original drawings from one writer.
+                Eighty were used for training and 20 were held back for validation.</p>
+            <p>The final neural network correctly classified 18 of the 20 validation
+                drawings. Training replay uses 11 saved checkpoints with actual
+                model weights.</p>
+            <p>The website also supports drawing input, neuron inspection,
+                training charts, and phone navigation.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>Why test integer calculations?</h2>
+        <div>
+            <p>The original model uses floating-point numbers, which can store
+                values with fractional parts. The project also tests fixed-point
+                numbers: integers with a scale that represents fractional values.</p>
+            <p>This helps determine how much precision the model needs before
+                building its calculations in hardware.</p>
+            <p>The tested 12-bit format made the same predictions as the original
+                model on all 100 collected drawings. That means the predictions
+                matched, not that every drawing was classified correctly.</p>
+            <p>The integer code was checked against a separate calculation in
+                150 generated test cases.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>What is an FPGA?</h2>
+        <div>
+            <p>An FPGA is a chip that can be configured to implement digital
+                circuits. Instead of only writing instructions for a processor,
+                a hardware design defines how calculations and data move through
+                the circuit.</p>
+            <p>The goal is to build the network's prediction calculations in
+                hardware, compare its outputs with Python, and measure its
+                speed and hardware use. Training will remain separate in Python.</p>
+            <p>FPGA execution has not been implemented yet. The public Explorer
+                currently runs predictions in the browser.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>What comes next?</h2>
+        <div>
+            <ul>
+                <li>Build and test the hardware calculation for one neuron.</li>
+                <li>Expand the design to a layer and then the complete network.</li>
+                <li>Compare hardware outputs with the Python integer model.</li>
+                <li>Collect handwriting from more people and test on new writers.</li>
+                <li>Measure hardware timing, accuracy, and resource use.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>Explore the work.</h2>
+        <div>
+            <p><a href="learn.html">Try the interactive model</a></p>
+            <p><a href="methods.html">Read the code decisions</a></p>
+            <p><a href="results.html">Compare the experiment results</a></p>
+            <p><a href="https://github.com/abhiveer-chhiber/digit-fpga">View the source code and project notes</a></p>
+        </div>
+    </section>
+</section>
+</main>
+
+<footer>
+    <span>DIGIT / FPGA</span>
+    <a href="https://github.com/abhiveer-chhiber/digit-fpga">Code and project notes ↗</a>
+</footer>
+</body>
+</html>

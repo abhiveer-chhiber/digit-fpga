@@ -595,3 +595,42 @@ pre { max-width: 100%; }
     footer { padding: 20px; gap: 12px; }
     footer a { white-space: normal; overflow-wrap: anywhere; }
 }
+
+/* Plain-language overview */
+.overview {
+    max-width: 1180px;
+    margin: auto;
+    padding: 64px clamp(20px, 4vw, 56px);
+}
+.overview-intro {
+    max-width: 740px;
+    color: var(--muted);
+    font-size: 17px;
+    margin-bottom: 44px;
+}
+.overview-section {
+    display: grid;
+    grid-template-columns: .75fr 1.25fr;
+    gap: 40px;
+    border-top: 1px solid var(--line);
+    padding: 30px 0;
+}
+.overview-section > * { min-width: 0; }
+.overview-section h2 {
+    font-family: "Instrument Serif", Georgia, serif;
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 1.15;
+}
+.overview-section p { max-width: 680px; }
+.overview-section ol, .overview-section ul {
+    padding-left: 22px;
+    margin-top: 0;
+}
+.overview-section li { margin-bottom: 10px; }
+@media (max-width: 700px) {
+    .overview { padding: 34px 20px; }
+    .overview-intro { font-size: 15px; }
+    .overview-section { grid-template-columns: 1fr; gap: 8px; }
+    .overview-section h2 { font-size: 30px; margin-bottom: 12px; }
+}
