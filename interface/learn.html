@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Explorer · Digit / FPGA</title>
     <link rel="stylesheet" href="learn.css">
+    <script type="module" src="navigation.js"></script>
     <script type="module" src="learn.js"></script>
 </head>
 <body class="explorer-page">
@@ -18,6 +19,22 @@
         <a href="results.html">Results</a>
     </nav>
 </header>
+
+
+<div class="mobile-bar">
+    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <button id="mobile-menu-open" type="button"
+        aria-haspopup="dialog" aria-controls="mobile-menu"
+        aria-expanded="false">Menu</button>
+</div>
+
+<dialog id="mobile-menu" aria-labelledby="mobile-menu-title">
+    <div class="mobile-menu-heading">
+        <h2 id="mobile-menu-title">Navigation</h2>
+        <button id="mobile-menu-close" type="button" autofocus>Close</button>
+    </div>
+    <nav id="mobile-navigation" aria-label="Main navigation"></nav>
+</dialog>
 
 <main id="main-content">
 <section id="explorer" class="explorer">

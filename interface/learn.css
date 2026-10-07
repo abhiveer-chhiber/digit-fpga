@@ -475,3 +475,123 @@ footer {
         animation: none !important;
     }
 }
+
+
+/* Mobile navigation and content layout */
+.mobile-bar { display: none; }
+
+#mobile-menu {
+    position: fixed;
+    inset: 0 auto 0 0;
+    margin: 0;
+    width: min(300px, calc(100vw - 32px));
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    padding: max(24px, env(safe-area-inset-top)) 22px 24px;
+    border: 0;
+    border-right: 1px solid var(--line);
+    background: var(--background);
+    color: var(--ink);
+    overflow-y: auto;
+}
+#mobile-menu::backdrop { background: rgb(0 0 0 / 55%); }
+.mobile-menu-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 34px;
+}
+.mobile-menu-heading h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+#mobile-navigation {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 12px;
+}
+#mobile-navigation a {
+    padding: 13px 14px;
+    border-left: 2px solid transparent;
+    color: var(--muted);
+}
+#mobile-navigation a[aria-current="page"] {
+    border-left-color: var(--teal);
+    color: var(--ink);
+}
+.section-heading > *,
+.inspection > *,
+.learning-curves > *,
+.decision > *,
+.draw-panel > * {
+    min-width: 0;
+}
+pre { max-width: 100%; }
+.table-wrap { max-width: 100%; }
+
+@media (max-width: 850px) {
+    body.navigation-ready { padding-left: 0; }
+    .navigation-ready .site-header { display: none; }
+    .navigation-ready .mobile-bar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        padding: max(12px, env(safe-area-inset-top)) 20px 12px;
+        background: var(--background);
+        border-bottom: 1px solid var(--line);
+        z-index: 20;
+    }
+    .navigation-ready .mobile-bar .wordmark {
+        font-size: 12px;
+        white-space: nowrap;
+    }
+    .navigation-ready.menu-open { overflow: hidden; }
+    .navigation-ready .skip-link { left: 20px; }
+    button, select { min-height: 44px; }
+    select, input, button { font-size: 16px; }
+    .architecture { width: 100%; overflow-wrap: anywhere; }
+    .timeline-heading { display: grid; gap: 8px; }
+    #epoch { overflow-wrap: anywhere; }
+    #timeline { min-height: 36px; }
+    .learning-curves { gap: 28px; }
+    .table-wrap table { min-width: 520px; }
+}
+
+@media (max-width: 560px) {
+    .explorer { padding: 30px 20px 48px; }
+    .paper-page .story,
+    .paper-page .decisions,
+    .paper-page .results {
+        padding: 34px 20px;
+    }
+    h1, .paper-page h1 { font-size: clamp(36px, 9vw, 48px); }
+    .section-heading { gap: 12px; }
+    .toolbar { gap: 14px; }
+    .toolbar label { width: 100%; }
+    .toolbar select { width: 100%; }
+    #play { width: 100%; }
+    #network { height: 340px; }
+    .stage-caption {
+        flex-direction: column;
+        gap: 4px;
+        font-size: 11px;
+    }
+    .network-legend { gap: 9px 18px; }
+    .inspection, .learning-curves, .decision, .draw-panel {
+        grid-template-columns: 1fr;
+    }
+    .draw-workspace { width: 100%; max-width: 320px; }
+    #draw-canvas { width: 100%; max-width: 320px; }
+    .draw-actions { display: flex; flex-wrap: wrap; }
+    .draw-actions button { flex: 1; }
+    .drawing img, #pixels { width: min(44%, 128px); }
+    footer { padding: 20px; gap: 12px; }
+    footer a { white-space: normal; overflow-wrap: anywhere; }
+}

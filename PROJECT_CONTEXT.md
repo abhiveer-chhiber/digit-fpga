@@ -588,3 +588,13 @@ Next session:
 - Check touch drawing, readable controls, charts, tables, and horizontal overflow.
 - Investigate recognition errors and collect more handwriting.
 - Revisit the requested development-time estimates for the README, clearly labeled as estimates rather than logged hours.
+
+## 2026-10-07 — Mobile website layout
+
+I added a collapsible left navigation drawer for smaller screens and kept the fixed sidebar on desktop. All four pages use the same navigation links and active-page indicator.
+
+I adjusted spacing, controls, drawing input, and content layouts for narrow screens. Wide result tables can scroll within their own container.
+
+I checked navigation and page scrolling at a 390px viewport in Chrome device emulation. At 320px, I also checked drawing predictions and training replay. I then returned to desktop and confirmed that the sidebar and network layout still worked. Testing on a physical phone is still pending.
+
+The website build passed with 11 recorded checkpoints and 20 original validation drawings.
