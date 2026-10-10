@@ -633,3 +633,17 @@ Verification command: `.venv/bin/python src/fixed_point/verify.py`
 New comparison command: `.venv/bin/python src/fixed_point/evaluate.py --name fixed-point-v2`
 
 I tested these calculations in Python. I have not run them on an FPGA yet.
+
+## 2026-10-10 — Hardware neuron simulation
+
+Added a SystemVerilog neuron using the tested 12-bit format and a 32-bit accumulator. One input-weight pair is handled per valid cycle, followed by bias, rounding, saturation, and optional ReLU.
+
+Generated 416 test cases: 36 boundary cases, 200 generated cases, and 180 using values from the trained model. All hardware outputs and saturation flags matched Python.
+
+Reset during a calculation, input gaps, saved bias and ReLU settings, starts while busy, and the one-cycle completion signal also passed.
+
+Added a single command to generate vectors, compile, simulate, and save a report. Results are saved in `docs/neuron-sim-v1.json`; interface details are in `docs/hardware-neuron.md`.
+
+Used Icarus Verilog 12.0. Final compilation had no warnings.
+
+Next: synthesis checks and a full layer. The neuron has passed simulation but has not run on a physical FPGA.

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "status": "passed",
+  "tool": "Icarus Verilog version 12.0 (stable) ()",
+  "storage_bits": 12,
+  "fractional_bits": 6,
+  "accumulator_bits": 32,
+  "cases": {
+    "boundary": 36,
+    "generated": 200,
+    "model": 180
+  },
+  "total_cases": 416,
+  "checks": [
+    "integer output",
+    "accumulator saturation flag",
+    "output saturation flag",
+    "reset during calculation",
+    "gaps between valid inputs",
+    "bias and ReLU captured at start",
+    "start ignored while busy",
+    "single-cycle completion",
+    "output held while idle"
+  ],
+  "source_sha256": {
+    "hardware/rtl/fixed_neuron.sv": "ffe6d6eae2c7fc57389b6602d5563c5593e46cca1e8b3c0165a120288e759b60",
+    "hardware/tb/fixed_neuron_tb.sv": "5b6ea3dfc0d183d6345830718685adbf92db47d16f9ecc9d7e92c61e3ab82ce5",
+    "src/fixed_point/generate_neuron_vectors.py": "6b3453492321875ead670880bdd061cc01e17881d62a0dfa84692096de3c04e9",
+    "src/fixed_point/inference.py": "3c4a1c85daaa542006e1579496b5cf35d283d0fdb04300c5c24a10d60337e636",
+    "src/fixed_point/run_neuron_sim.py": "c78ffc13a248ec14c685fef6dbc658b2c1338d2064bdfa1914fe98d8cf0ff740",
+    "site_assets/network-view.json": "4f59376860cdc2e4b07d7a18b4a2c041ac05d1650327ebc5186c028bc1631927"
+  },
+  "vectors_sha256": "1fe2d583642c29b74ae04db1360583af7619ca1af6facbf031f2931c6344326d",
+  "simulation_output": "PASS: 416 neuron cases matched Python outputs and saturation flags\nPASS: reset, input gaps, saved bias/ReLU, busy-start handling, and completion pulse\nhardware/tb/fixed_neuron_tb.sv:187: $finish called at 427906000 (1ps)\n",
+  "scope": "RTL simulation; no FPGA execution or physical timing measurements"
+}
