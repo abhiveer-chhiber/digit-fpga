@@ -647,3 +647,20 @@ Added a single command to generate vectors, compile, simulate, and save a report
 Used Icarus Verilog 12.0. Final compilation had no warnings.
 
 Next: synthesis checks and a full layer. The neuron has passed simulation but has not run on a physical FPGA.
+
+## 2026-10-10 — Neuron trace viewer
+
+Added a browser view of my hardware neuron simulation. The test runs the
+same three input-weight pairs with and without ReLU, producing stored
+outputs of 0 and -8 respectively.
+
+The viewer shows recorded accumulator values, control signals, and the
+selected clock cycle. Playback moves smoothly between recorded points;
+the connecting curve is only a visual guide between samples.
+
+Saved the trace CSV so the website can build without running the simulator.
+A fresh simulation reproduced the saved trace exactly. Checked playback
+and the return link in the built website.
+
+Updated Overview with the 416 passing neuron tests. The complete hardware
+network and physical FPGA execution are still unfinished.

@@ -101,8 +101,16 @@
             <p>The goal is to build the network's prediction calculations in
                 hardware, compare its outputs with Python, and measure its
                 speed and hardware use. Training will remain separate in Python.</p>
-            <p>FPGA execution has not been implemented yet. The public Explorer
-                currently runs predictions in the browser.</p>
+            <p>A single hardware neuron has been written in SystemVerilog
+                and tested in simulation. All 416 test cases matched the
+                Python reference outputs and clipping flags. Checks also covered
+                reset, pauses between inputs, and the completion signal.</p>
+            <p><a href="neuron-trace.html">View the recorded neuron simulation</a>.
+                This short example shows inputs, accumulated values, and output
+                timing, both with and without ReLU.</p>
+            <p>The complete network has not been implemented in hardware or
+                run on a physical FPGA. The public Explorer performs predictions
+                in the browser.</p>
         </div>
     </section>
 
@@ -110,7 +118,6 @@
         <h2>What comes next?</h2>
         <div>
             <ul>
-                <li>Build and test the hardware calculation for one neuron.</li>
                 <li>Expand the design to a layer and then the complete network.</li>
                 <li>Compare hardware outputs with the Python integer model.</li>
                 <li>Collect handwriting from more people and test on new writers.</li>

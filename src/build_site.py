@@ -2,9 +2,12 @@
 
 import json
 import shutil
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from src.fixed_point.render_neuron_trace import render_trace
 OUTPUT = ROOT / "build" / "site"
 
 VIEWER_FILES = (
@@ -75,6 +78,14 @@ def build():
     )
     copies.append((report_path, Path("docs/fixed-point-v1.json")))
 
+    trace_path = ROOT / "site_assets/neuron-trace.csv"
+    trace_html = render_trace(trace_path)
+    copies.append((trace_path, Path("site_assets/neuron-trace.csv")))
+    copies.append((
+        ROOT / "docs/neuron-sim-v1.json",
+        Path("docs/neuron-sim-v1.json"),
+    ))
+
     sample_paths = set()
     for sample in data["samples"]:
         relative = Path(sample["path"])
@@ -105,6 +116,10 @@ def build():
 
     (OUTPUT / "interface/results.html").write_text(
         results_html, encoding="utf-8"
+    )
+
+    (OUTPUT / "interface/neuron-trace.html").write_text(
+        trace_html, encoding="utf-8"
     )
 
     (OUTPUT / "index.html").write_text(
