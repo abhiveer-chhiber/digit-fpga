@@ -15,6 +15,10 @@ let checkpointIndex = 0, sampleIndex = 0;
 let selectedNeuron = { layer: 1, index: 0 };
 let yaw = -0.28, pitch = 0.12, width = 0, height = 0;
 let playing = false, phase = 0, lastTime = 0, frame = null, drag = null;
+let targetYaw = -0.28, targetPitch = 0.12;
+let cameraFrame = null, lastCameraTime = 0;
+let displayedActivations = null, displayedGradients = null;
+let visualTransition = null, visualFrame = null;
 
 const snapshot = () => data.snapshots[checkpointIndex];
 const format = value => Math.abs(value) < 0.0001 && value !== 0
@@ -52,15 +56,24 @@ function buildNodes() {
         `${nodes.length} of ${dimensions.reduce((a, b) => a + b, 0)} neurons shown`;
 }
 
-function buildEdges() {
+function buildEdges(previousWeights = new Map()) {
     edges = [];
     for (let layer = 0; layer < layers.length - 1; layer++) {
         for (const destination of layers[layer + 1]) {
-            const incoming = layers[layer].map(source => ({
-                source, destination,
-                weight: snapshot().weights[layer][source.index][destination.index],
-            }));
-            incoming.sort((a, b) => Math.abs(b.weight) - Math.abs(a.weight));
+            const incoming = layers[layer].map(source => {
+                const key = `${layer}:${source.index}:${destination.index}`;
+                const targetWeight =
+                    snapshot().weights[layer][source.index][destination.index];
+                const startWeight = previousWeights.has(key)
+                    ? previousWeights.get(key) : targetWeight;
+                return {
+                    source, destination, key,
+                    weight: startWeight, startWeight, targetWeight,
+                };
+            });
+            incoming.sort((a, b) =>
+                Math.abs(b.targetWeight) - Math.abs(a.targetWeight)
+            );
             edges.push(...incoming.slice(0, 3));
         }
     }
@@ -221,6 +234,9 @@ function drawChart(id, trainKey, validationKey, accuracy) {
 function updateCalculation() {
     const sample = currentSample();
     const inspection = document.querySelector(".inspection");
+    const previousEdgeWeights = new Map(
+        edges.map(edge => [edge.key, edge.weight])
+    );
 
     $("timeline").value = checkpointIndex;
     const metrics = data.history.find(row => row.epoch === snapshot().epoch);
@@ -232,6 +248,14 @@ function updateCalculation() {
     if (!sample) {
         result = null;
         gradients = null;
+        displayedActivations = null;
+        displayedGradients = null;
+        visualTransition = null;
+        if (visualFrame !== null) {
+            cancelAnimationFrame(visualFrame);
+            visualFrame = null;
+        }
+        edges = [];
         inspection.hidden = true;
         drawNetwork();
         $("phase").textContent = "Draw a digit, then select Predict drawing";
@@ -259,10 +283,94 @@ function updateCalculation() {
             : "Select a digit label to inspect loss gradients. This drawing uses forward calculations only.");
 
     inspection.hidden = false;
-    buildEdges();
+    buildEdges(previousEdgeWeights);
+    beginVisualTransition();
     drawInput();
     showPrediction();
     inspectNeuron();
+    drawNetwork();
+}
+
+function beginVisualTransition() {
+    const targetActivations = result.activations.map(values => [...values]);
+    const targetGradients = gradients
+        ? gradients.map(values => [...values]) : null;
+
+    if (!displayedActivations || reducedMotion) {
+        displayedActivations = targetActivations;
+        displayedGradients = targetGradients;
+        edges.forEach(edge => { edge.weight = edge.targetWeight; });
+        visualTransition = null;
+        if (visualFrame !== null) {
+            cancelAnimationFrame(visualFrame);
+            visualFrame = null;
+        }
+        return;
+    }
+
+    const startActivations = displayedActivations.map(values => [...values]);
+    const startGradients = targetGradients
+        ? displayedGradients
+            ? displayedGradients.map(values => [...values])
+            : targetGradients.map(values => values.map(() => 0))
+        : null;
+
+    visualTransition = {
+        startTime: null,
+        startActivations,
+        targetActivations,
+        startGradients,
+        targetGradients,
+        startWeights: edges.map(edge => edge.startWeight),
+        targetWeights: edges.map(edge => edge.targetWeight),
+    };
+
+    if (visualFrame === null) {
+        visualFrame = requestAnimationFrame(animateVisualTransition);
+    }
+}
+
+function animateVisualTransition(time) {
+    const transition = visualTransition;
+    if (!transition) {
+        visualFrame = null;
+        return;
+    }
+
+    if (transition.startTime === null) transition.startTime = time;
+    const progress = Math.min((time - transition.startTime) / 520, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    displayedActivations = transition.startActivations.map((layer, index) =>
+        layer.map((value, neuron) => value
+            + (transition.targetActivations[index][neuron] - value) * eased)
+    );
+
+    displayedGradients = transition.targetGradients
+        ? transition.startGradients.map((layer, index) =>
+            layer.map((value, neuron) => value
+                + (transition.targetGradients[index][neuron] - value) * eased)
+        )
+        : null;
+
+    edges.forEach((edge, index) => {
+        const start = transition.startWeights[index];
+        const target = transition.targetWeights[index];
+        edge.weight = start + (target - start) * eased;
+    });
+
+    drawNetwork();
+
+    if (progress < 1) {
+        visualFrame = requestAnimationFrame(animateVisualTransition);
+        return;
+    }
+
+    displayedActivations = transition.targetActivations;
+    displayedGradients = transition.targetGradients;
+    edges.forEach(edge => { edge.weight = edge.targetWeight; });
+    visualTransition = null;
+    visualFrame = null;
     drawNetwork();
 }
 
@@ -284,6 +392,8 @@ function project(node) {
 function drawNetwork() {
     ctx.clearRect(0, 0, width, height);
     if (!result) return;
+    const shownActivations = displayedActivations ?? result.activations;
+    const shownGradients = displayedGradients ?? gradients;
     const backwardPhase = phase >= 0.58 && gradients !== null;
     const progress = gradients === null ? phase
         : backwardPhase ? (phase - 0.58) / 0.42 : phase / 0.58;
@@ -318,23 +428,26 @@ function drawNetwork() {
             const t = backwardPhase ? 1 - local : local;
             const a = positions.get(edge.source), b = positions.get(edge.destination);
             ctx.fillStyle = backwardPhase ? "#e9b679" : "#b3f3e4";
+            ctx.shadowColor = ctx.fillStyle;
+            ctx.shadowBlur = 10;
             ctx.beginPath();
-            ctx.arc(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 2, 0, Math.PI * 2);
+            ctx.arc(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, 2.2, 0, Math.PI * 2);
             ctx.fill();
+            ctx.shadowBlur = 0;
         }
     }
 
     const maxima = layers.map((group, layer) => {
         const values = backwardPhase && layer > 0
-            ? gradients[layer - 1] : result.activations[layer];
+            ? shownGradients[layer - 1] : shownActivations[layer];
         return Math.max(0.000001, ...values.map(Math.abs));
     });
 
     const sorted = [...projected].sort((a, b) => b.point.z - a.point.z);
     for (const { node, point } of sorted) {
         const value = backwardPhase && node.layer > 0
-            ? gradients[node.layer - 1][node.index]
-            : result.activations[node.layer][node.index];
+            ? shownGradients[node.layer - 1][node.index]
+            : shownActivations[node.layer][node.index];
         const intensity = Math.sqrt(Math.abs(value) / maxima[node.layer]);
         const selected = node.layer === selectedNeuron.layer
             && node.index === selectedNeuron.index;
@@ -349,11 +462,14 @@ function drawNetwork() {
         ctx.globalAlpha = 1;
 
         if (selected || predicted) {
+            ctx.shadowColor = predicted ? "#e9eef5" : "#83d8c8";
+            ctx.shadowBlur = 12;
             ctx.strokeStyle = "#e9eef5";
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.arc(point.x, point.y, (output ? 8 : 6) * point.scale, 0, Math.PI * 2);
             ctx.stroke();
+            ctx.shadowBlur = 0;
         }
         if (output) {
             ctx.fillStyle = predicted ? "#e9eef5" : "#a7b5c8";
@@ -375,6 +491,37 @@ function drawNetwork() {
         );
     });
     ctx.textAlign = "left";
+}
+
+function animateCamera(time) {
+    const delta = lastCameraTime
+        ? Math.min((time - lastCameraTime) / 1000, 0.05) : 1 / 60;
+    lastCameraTime = time;
+    const easing = 1 - Math.exp(-16 * delta);
+
+    yaw += (targetYaw - yaw) * easing;
+    pitch += (targetPitch - pitch) * easing;
+    drawNetwork();
+
+    if (Math.abs(targetYaw - yaw) + Math.abs(targetPitch - pitch) > 0.0003) {
+        cameraFrame = requestAnimationFrame(animateCamera);
+    } else {
+        yaw = targetYaw;
+        pitch = targetPitch;
+        cameraFrame = null;
+        lastCameraTime = 0;
+        drawNetwork();
+    }
+}
+
+function moveCamera() {
+    if (reducedMotion) {
+        yaw = targetYaw;
+        pitch = targetPitch;
+        drawNetwork();
+    } else if (cameraFrame === null) {
+        cameraFrame = requestAnimationFrame(animateCamera);
+    }
 }
 
 function stopPlayback() {
@@ -435,9 +582,9 @@ $("sample").addEventListener("change", () => {
 
 $("camera").addEventListener("change", () => {
     const flat = $("camera").value === "flat";
-    yaw = flat ? 0 : -0.28;
-    pitch = flat ? 0 : 0.12;
-    drawNetwork();
+    targetYaw = flat ? 0 : -0.28;
+    targetPitch = flat ? 0 : 0.12;
+    moveCamera();
 });
 
 $("neuron").addEventListener("change", () => {
@@ -456,11 +603,11 @@ canvas.addEventListener("pointermove", event => {
     if (!drag) return;
     const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
     if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true;
-    yaw += dx * 0.005;
-    pitch = Math.max(-0.6, Math.min(0.6, pitch + dy * 0.004));
+    targetYaw += dx * 0.005;
+    targetPitch = Math.max(-0.6, Math.min(0.6, targetPitch + dy * 0.004));
     drag.x = event.clientX;
     drag.y = event.clientY;
-    drawNetwork();
+    moveCamera();
 });
 
 canvas.addEventListener("pointerup", event => {
@@ -653,6 +800,7 @@ async function initialize() {
         buildNodes();
         populateNeuronSelect();
         $("viewer").hidden = false;
+        $("viewer").classList.add("is-ready");
         resize();
         updateCalculation();
         $("status").textContent =
