@@ -1,93 +1,111 @@
 # FPGA Handwritten Digit Recognition
 
-I am building a handwritten digit recognition system to learn how machine learning, numerical precision, and digital hardware work together. I have implemented the software model and published an interactive display of the project. My next hardware goal is FPGA inference.
+I am building a handwritten digit recognition system to study how machine learning, numerical precision, and digital hardware fit together. The project starts with a model trained on my own handwriting, then compares floating-point and fixed-point inference before moving individual calculations into SystemVerilog.
 
-**[Explore my model and its training](https://abhiveer-chhiber.github.io/digit-fpga/)**
+**[Open the interactive project](https://abhiveer-chhiber.github.io/digit-fpga/)**
 
-## Project Display
+[Project overview](https://abhiveer-chhiber.github.io/digit-fpga/interface/overview.html) · [Methods](https://abhiveer-chhiber.github.io/digit-fpga/interface/methods.html) · [Results](https://abhiveer-chhiber.github.io/digit-fpga/interface/results.html) · [Recorded hardware-neuron trace](https://abhiveer-chhiber.github.io/digit-fpga/interface/neuron-trace.html)
 
-I collected 100 handwritten digit drawings and trained a real neural network on 80 of them, holding out 20 for validation.
+## What is implemented
 
-I built the website to make the calculations and training progress easier to explore:
+- A custom dataset of 100 original 128×128 handwritten digit drawings, with 10 samples per digit from one writer.
+- A preprocessing pipeline that creates matching 8×8 and 16×16 inputs from the same original drawings.
+- Linear classification baselines and a NumPy neural network with a 256 → 128 → 64 → 10 architecture and 41,802 trainable parameters.
+- Fixed-point software inference with explicit quantization, rounding, and saturation.
+- A signed 12-bit fixed-point neuron written in SystemVerilog, with a 32-bit accumulator, optional ReLU, rounding, and saturation flags.
+- An interactive browser viewer that uses exported model weights to display predictions, activations, and saved training checkpoints.
 
-- Replay 11 recorded training checkpoints
-- Compare predictions on my validation drawings
-- Inspect neuron activations, biases, and sample gradients
-- Rotate the network visualization
-- Follow training and validation loss and accuracy
-- Read my code decisions and why I made them
+## Model results
 
-I use the actual saved weights to calculate predictions in the browser. I checked all 220 exported sample-checkpoint predictions against Python.
+The current dataset is small and contains handwriting from one writer. The validation split contains 20 drawings from that same writer, so these results are an early experiment, not evidence of generalization to new handwriting.
 
-Playback uses recorded checkpoints. I animate signals to illustrate forward and backward calculations, rather than to measure training or hardware timing. I display a subset of neurons for readability and use the complete network for prediction calculations.
+| Model | Training correct | Validation correct | Validation loss |
+| --- | ---: | ---: | ---: |
+| 8×8 linear baseline | 79 / 80 | 19 / 20 | 0.5076 |
+| 16×16 linear baseline | 80 / 80 | 18 / 20 | 0.3600 |
+| 16×16 neural network | 80 / 80 | 18 / 20 | 0.1408 |
 
-## My Dataset
+The neural network reached 19 / 20 validation accuracy at earlier checkpoints and finished at 18 / 20. Accuracy and loss measure different things, so I track both.
 
-I drew and collected 100 original 128×128 PNG images, with 10 drawings per digit from one writer.
+## Fixed-point experiments
 
-I preprocess the originals into centered grayscale images at 8×8 and 16×16. I preserve the original files. I kept nine drawings that touch an image edge to retain variation in my handwriting.
+I compared integer inference with the floating-point neural network using the same saved checkpoint and dataset split.
 
-I use a fixed split of 80 training drawings and 20 validation drawings. Both resolutions use identical sample assignments.
+- 16-bit storage with 10 fractional bits and 12-bit storage with 6 fractional bits produced the same predictions as the floating-point model on all 100 drawings.
+- The 10-bit format changed one validation prediction and classified 19 / 20 validation drawings correctly. This is one changed result on a small, same-writer dataset, not proof that lower precision is better.
+- The 8-bit format lost substantial accuracy at the tested scale because many weights rounded to zero.
 
-```text
-data/raw/
-└── writer01/
-    └── digit/
-        └── sample.png
-```
+The experiment report records the format, error, prediction agreement, and saturation counts: [fixed-point report](docs/fixed-point-v1.json).
 
-## Models and Results
+## SystemVerilog neuron
 
-I implemented a linear baseline and a neural network in NumPy.
+The hardware module implements one neuron, not the complete neural network. It accepts input-weight pairs over successive clock cycles, accumulates their products, adds a saved bias, optionally applies ReLU, rounds the result, and clips values that exceed the supported range.
 
-For the neural network, I use ReLU hidden layers, softmax output, cross-entropy loss, L2 regularization, and Adam optimization. My architecture is **256 → 128 → 64 → 10**, with **41,802 trainable parameters**.
+The neuron uses signed 12-bit inputs, weights, and outputs with 6 fractional bits. Products and the bias use 12 fractional bits, and the accumulator is signed 32-bit.
 
-My final results after 1,000 epochs:
+I tested the RTL with Icarus Verilog against Python-generated reference vectors:
 
-| Model | Input resolution | Training correct | Validation correct | Validation accuracy |
-| --- | --- | --- | --- | --- |
-| Linear baseline | 8×8 | 79 / 80 | 19 / 20 | 95% |
-| Linear baseline | 16×16 | 80 / 80 | 18 / 20 | 90% |
-| Neural network | 16×16 | 80 / 80 | 18 / 20 | 90% |
+| Test group | Cases |
+| --- | ---: |
+| Rounding and range boundaries | 36 |
+| Generated integer inputs | 200 |
+| Values from the trained model | 180 |
+| **Total** | **416** |
 
-I reached 95% validation accuracy at several earlier neural network checkpoints, then finished at 90%. My larger model did not beat my 8×8 baseline at the final checkpoint.
+All 416 outputs and saturation flags matched the Python reference. Additional checks covered reset during a calculation, gaps between valid inputs, bias and ReLU capture, ignored start signals while busy, and the one-cycle completion signal.
 
-I evaluated only 20 validation drawings from the same writer as the training data. Each prediction changes validation accuracy by five percentage points. I have not yet established performance on other people's handwriting.
+- [Hardware-neuron design and test details](docs/hardware-neuron.md)
+- [Recorded simulation report](docs/neuron-sim-v1.json)
+- [Interactive recorded neuron trace](https://abhiveer-chhiber.github.io/digit-fpga/interface/neuron-trace.html)
 
-I verified both model implementations with numerical gradient checks. I also reloaded neural network checkpoints and confirmed that they reproduced the saved metrics.
+**Current boundary:** the single-neuron RTL has passed simulation. The complete neural network has not been implemented in RTL, synthesized, or run on a physical FPGA. FPGA timing, resource use, and end-to-end inference performance have not been measured. The public browser viewer performs software inference.
 
-## Questions I Am Investigating
+## Run the project
 
-- How does image resolution affect accuracy?
-- When does a larger model provide a useful improvement?
-- How well does my model handle handwriting from new writers?
-- How many bits do I need for pixels, weights, and intermediate calculations?
-- How much accuracy do I lose when I reduce numerical precision?
-- How does fixed-point inference compare with floating-point software?
-- What FPGA resources, latency, and throughput can I achieve?
-
-## Running My Website Locally
-
-I keep the published model snapshot in `site_assets/network-view.json`, so I can run the viewer without retraining.
-
-From the repository root:
+Create a virtual environment and install the Python dependencies:
 
 ```bash
-python3 src/build_site.py
-python3 -m http.server 8001 --bind 127.0.0.1 --directory build/site
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-Open http://localhost:8001/.
+Check the fixed-point software implementation against its independent scalar reference:
 
-I configured GitHub Actions to rebuild and publish the website when I push changes to `main`.
+```bash
+python src/fixed_point/verify.py
+```
 
-## Next Steps
+Run the SystemVerilog neuron simulation. This requires Icarus Verilog, including both `iverilog` and `vvp`, on your PATH:
 
-- Collect handwriting from additional writers
-- Evaluate drawings from writers excluded from training
-- Compare model choices through recorded experiments
-- Implement and verify fixed-point inference
-- Build and simulate my FPGA inference design
-- Measure hardware accuracy, latency, and resource use
+```bash
+python src/fixed_point/run_neuron_sim.py --name neuron-sim-local
+```
 
-I have not implemented FPGA execution yet. My current website calculates predictions in the browser.
+Build the static website locally:
+
+```bash
+python src/build_site.py
+python -m http.server 8001 --directory build/site
+```
+
+Then open http://localhost:8001/.
+
+## Repository structure
+
+- `data/raw/`: original handwritten PNG files.
+- `src/data/`: collection, preprocessing, and dataset loading.
+- `src/model/`: NumPy baselines, neural network training, and exports.
+- `src/fixed_point/`: quantized inference, verification, test-vector generation, and simulation tools.
+- `hardware/rtl/`: SystemVerilog design.
+- `hardware/tb/`: SystemVerilog testbenches.
+- `interface/`: interactive browser viewer and project pages.
+- `docs/`: experiment reports and hardware design notes.
+
+## Next steps
+
+- Collect handwriting from additional writers and evaluate on writers excluded from training.
+- Expand the single-neuron RTL into a layer and then the full network.
+- Compare each hardware stage against the Python reference.
+- Synthesize the design and measure resource use and timing on a target FPGA.
+- Connect the hardware inference path to the interactive interface.

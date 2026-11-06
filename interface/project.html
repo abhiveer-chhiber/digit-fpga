@@ -6,7 +6,6 @@
     <title>The project · Digit / FPGA</title>
     <link rel="stylesheet" href="learn.css">
     <script type="module" src="navigation.js"></script>
-
 </head>
 <body class="paper-page">
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -20,7 +19,6 @@
         <a href="results.html">Results</a>
     </nav>
 </header>
-
 
 <div class="mobile-bar">
     <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
@@ -40,16 +38,27 @@
 <main id="main-content">
 <section id="story" class="story">
     <p class="eyebrow">Project scope</p>
-    <h1>Software reference<br>for FPGA inference.</h1>
+    <h1>From a learned model<br>to FPGA inference.</h1>
     <div class="story-copy">
-        <p>This project investigates the relationship between learned models,
-            numerical precision, and FPGA inference.</p>
-        <p>The implementation includes a custom handwritten dataset, a collection
-            interface, a preprocessing pipeline, and a linear baseline and
-            multilayer neural network implemented in NumPy.</p>
-        <p>The current implementation covers software training, verified
-            checkpoint export, and browser inference. FPGA execution has not
-            yet been implemented.</p>
+        <p>This project investigates how a handwritten digit classifier can move
+            from a Python model into digital hardware. I use a custom dataset,
+            compare model and number formats, and check hardware calculations
+            against a software reference.</p>
+        <p>The software implementation includes a collection interface,
+            image preprocessing, linear baselines, a NumPy neural network,
+            fixed-point inference, and an interactive browser viewer.</p>
+        <p>A single neuron is also implemented in SystemVerilog. Its outputs
+            and saturation flags matched the Python reference in all 416
+            simulation cases. The testbench also checks reset, input gaps,
+            saved bias and ReLU settings, and control-signal behavior.</p>
+        <p>The complete neural network has not yet been implemented in RTL,
+            synthesized, or run on a physical FPGA. The public Explorer
+            performs predictions in the browser, using the exported software
+            model. FPGA timing and resource use have not been measured.</p>
+        <p><a href="overview.html">Read the project overview</a> ·
+            <a href="methods.html">Review the implementation methods</a> ·
+            <a href="results.html">Compare the results</a> ·
+            <a href="neuron-trace.html">Explore the recorded neuron simulation</a></p>
     </div>
 </section>
 </main>

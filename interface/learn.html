@@ -8,22 +8,22 @@
     <script type="module" src="navigation.js"></script>
     <script type="module" src="learn.js"></script>
 </head>
-<body class="explorer-page">
+<body class="paper-page explorer-page">
 <a class="skip-link" href="#main-content">Skip to content</a>
 <header class="site-header">
-    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <a class="wordmark" href="#explorer">DIGIT / FPGA</a>
     <nav aria-label="Main navigation">
-        <a href="learn.html" aria-current="page">Explorer</a>
-        <a href="overview.html">Overview</a>
-        <a href="project.html">The project</a>
-        <a href="methods.html">How it works</a>
-        <a href="results.html">Results</a>
+        <a href="#explorer" aria-current="location">Explorer</a>
+        <a href="#overview">Overview</a>
+        <a href="#project">The project</a>
+        <a href="#methods">How it works</a>
+        <a href="#results">Results</a>
     </nav>
 </header>
 
 
 <div class="mobile-bar">
-    <a class="wordmark" href="learn.html">DIGIT / FPGA</a>
+    <a class="wordmark" href="#explorer">DIGIT / FPGA</a>
     <button id="mobile-menu-open" type="button"
         aria-haspopup="dialog" aria-controls="mobile-menu"
         aria-expanded="false">Menu</button>
@@ -83,13 +83,14 @@
                 <span>Drag to rotate</span>
             </div>
             <canvas id="network" role="img"
-                aria-label="Network layers. Node brightness shows activation or gradient magnitude. Selected connections show actual weights."></canvas>
+                aria-label="Three-dimensional view of all 458 neurons and all 41,600 weighted connections. Node colors identify layers, brightness shows activation or gradient magnitude, and connection colors show weight sign."></canvas>
         </div>
 
         <div class="network-legend">
-            <span>Teal connections: positive weights</span>
-            <span>Amber connections: negative weights</span>
+            <span>Lime connections: positive weights</span>
+            <span>Violet connections: negative weights</span>
             <span id="display-count"></span>
+            <span class="network-key-note">White rings highlight the selected neuron and the output neuron with the highest predicted probability. If they are the same neuron, only one ring appears.</span>
         </div>
 
         <div class="replay">
@@ -184,11 +185,316 @@
         </div>
     </div>
 </section>
+<section id="overview" class="overview" aria-labelledby="overview-heading">
+    <p class="eyebrow">Project overview</p>
+    <h1 id="overview-heading">Recognizing a handwritten digit.</h1>
+    <p class="overview-intro">This project trains a neural network to recognize
+        drawings of digits from 0 to 9. The website shows its predictions,
+        saved training progress, and the calculations inside the network.
+        The next goal is to run those prediction calculations on an FPGA.</p>
+
+    <section class="overview-section">
+        <h2>What happens to a drawing?</h2>
+        <div>
+            <ol>
+                <li>A drawing is cropped, centered, and resized to a 16 × 16 image.</li>
+                <li>Its 256 pixels become numbers passed into the neural network.</li>
+                <li>The network combines those numbers using weights learned during training.</li>
+                <li>It produces a score for each digit and selects the highest one.</li>
+            </ol>
+            <p>Visitors can draw a digit in the Explorer or choose a saved drawing.
+                New drawings are processed in the browser and do not retrain the model.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>What works now?</h2>
+        <div>
+            <p>The project includes a drawing collector, image processing,
+                models written in Python with NumPy, and this interactive website.</p>
+            <p>The dataset contains 100 original drawings from one writer.
+                Eighty were used for training and 20 were held back for validation.</p>
+            <p>The final neural network correctly classified 18 of the 20 validation
+                drawings. Training replay uses 11 saved checkpoints with actual
+                model weights.</p>
+            <p>The website also supports drawing input, neuron inspection,
+                training charts, and phone navigation.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>Why test integer calculations?</h2>
+        <div>
+            <p>The original model uses floating-point numbers, which can store
+                values with fractional parts. The project also tests fixed-point
+                numbers: integers with a scale that represents fractional values.</p>
+            <p>This helps determine how much precision the model needs before
+                building its calculations in hardware.</p>
+            <p>The tested 12-bit format made the same predictions as the original
+                model on all 100 collected drawings. That means the predictions
+                matched, not that every drawing was classified correctly.</p>
+            <p>The integer code was checked against a separate calculation in
+                150 generated test cases.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>What is an FPGA?</h2>
+        <div>
+            <p>An FPGA is a chip that can be configured to implement digital
+                circuits. Instead of only writing instructions for a processor,
+                a hardware design defines how calculations and data move through
+                the circuit.</p>
+            <p>The goal is to build the network's prediction calculations in
+                hardware, compare its outputs with Python, and measure its
+                speed and hardware use. Training will remain separate in Python.</p>
+            <p>A single hardware neuron has been written in SystemVerilog
+                and tested in simulation. All 416 test cases matched the
+                Python reference outputs and clipping flags. Checks also covered
+                reset, pauses between inputs, and the completion signal.</p>
+            <p><a href="neuron-trace.html">View the recorded neuron simulation</a>.
+                This short example shows inputs, accumulated values, and output
+                timing, both with and without ReLU.</p>
+            <p>The complete network has not been implemented in hardware or
+                run on a physical FPGA. The public Explorer performs predictions
+                in the browser.</p>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>What comes next?</h2>
+        <div>
+            <ul>
+                <li>Expand the design to a layer and then the complete network.</li>
+                <li>Compare hardware outputs with the Python integer model.</li>
+                <li>Collect handwriting from more people and test on new writers.</li>
+                <li>Measure hardware timing, accuracy, and resource use.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="overview-section">
+        <h2>Explore the work.</h2>
+        <div>
+            <p><a href="#explorer">Try the interactive model</a></p>
+            <p><a href="#methods">Read the code decisions</a></p>
+            <p><a href="#results">Compare the experiment results</a></p>
+            <p><a href="https://github.com/abhiveer-chhiber/digit-fpga">View the source code and project notes</a></p>
+        </div>
+    </section>
+</section>
+
+<section id="project" class="story">
+    <p class="eyebrow">Project scope</p>
+    <h1>From a learned model<br>to FPGA inference.</h1>
+    <div class="story-copy">
+        <p>This project investigates how a handwritten digit classifier can move
+            from a Python model into digital hardware. I use a custom dataset,
+            compare model and number formats, and check hardware calculations
+            against a software reference.</p>
+        <p>The software implementation includes a collection interface,
+            image preprocessing, linear baselines, a NumPy neural network,
+            fixed-point inference, and an interactive browser viewer.</p>
+        <p>A single neuron is also implemented in SystemVerilog. Its outputs
+            and saturation flags matched the Python reference in all 416
+            simulation cases. The testbench also checks reset, input gaps,
+            saved bias and ReLU settings, and control-signal behavior.</p>
+        <p>The complete neural network has not yet been implemented in RTL,
+            synthesized, or run on a physical FPGA. The public Explorer
+            performs predictions in the browser, using the exported software
+            model. FPGA timing and resource use have not been measured.</p>
+        <p><a href="#overview">Read the project overview</a> ·
+            <a href="#methods">Review the implementation methods</a> ·
+            <a href="#results">Compare the results</a> ·
+            <a href="neuron-trace.html">Explore the recorded neuron simulation</a></p>
+    </div>
+</section>
+
+<section id="methods" class="decisions">
+    <p class="eyebrow">From drawing to prediction</p>
+    <h1>Method and implementation.</h1>
+
+    <article class="decision">
+        <div><span class="step">01 / DATA</span><h3>Source images.</h3></div>
+        <div>
+            <p>Original drawings were collected at 128×128. Both experimental
+                resolutions were generated from the same source images.
+                This controls for differences in handwriting when comparing resolution.</p>
+            <pre><code>original: 128 × 128
+experiment A: 8 × 8 = 64 inputs
+experiment B: 16 × 16 = 256 inputs</code></pre>
+            <p>Writer identifiers support future evaluation with writers excluded
+                from training. The current dataset contains 100 drawings from one writer.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">02 / PREPROCESSING</span><h3>Cropping, padding, and normalization.</h3></div>
+        <div>
+            <p>The script crops unused space and places the drawing in a padded square.
+                It preserves proportions, so a narrow 1 does not become a wide rectangle.
+                BOX resizing averages ink intensity instead of forcing pixels to black or white.</p>
+            <pre><code>pixels = np.asarray(image, dtype=np.float32) / 255.0</code></pre>
+            <p>Dividing by 255 changes the pixel range to 0–1. It does not change the
+                handwriting or tell the model which digit it is.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">03 / VALIDATION</span><h3>Fixed validation split.</h3></div>
+        <div>
+            <p>A fixed split assigns 80 drawings to training and 20 to validation.
+                Both resolutions use identical assignments. Validation labels are
+                excluded from parameter updates during training.</p>
+            <p>Validation supports model comparison but does not constitute an
+                untouched final test set. With 20 validation samples, one prediction
+                changes accuracy by five percentage points.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">04 / FORWARD PASS</span><h3>Weighted sums and ReLU.</h3></div>
+        <div>
+            <p>Each neuron multiplies its inputs by weights, adds them together,
+                and adds a bias. Hidden layers then use ReLU, which replaces negative
+                values with zero.</p>
+            <pre><code>values = activations[-1] @ weights + bias
+values = np.maximum(values, 0)</code></pre>
+            <p>Without a nonlinear activation between layers, stacking linear layers
+                would still describe a linear transformation. ReLU lets the network
+                represent more complex relationships.</p>
+        </div>
+    </article>
+
+    <article class="decision">
+        <div><span class="step">05 / LEARNING</span><h3>Backpropagation and Adam.</h3></div>
+        <div>
+            <p>Cross-entropy measures how much probability the model gives the correct
+                label. Backpropagation uses the chain rule to find how each parameter
+                affects that loss.</p>
+            <pre><code>delta = probabilities - targets
+weight_gradient = previous_activations.T @ delta</code></pre>
+            <p>Training averages gradients across a batch and adds L2 regularization.
+                Adam uses moving averages of gradients and squared gradients to choose
+                parameter updates. It does not replace backpropagation.</p>
+            <p>Analytical gradients were checked against numerical estimates on a
+                small test network before training. The largest absolute difference
+                was approximately 1.33e-11.</p>
+        </div>
+    </article>
+</section>
+
+<section id="results" class="results">
+    <p class="eyebrow">Model comparison</p>
+    <h1>Experimental results.</h1>
+    <div class="table-wrap">
+        <table>
+            <caption>Final results on writer01-v1, the same 20 validation drawings</caption>
+            <thead><tr><th>Model</th><th>Training correct</th><th>Validation correct</th><th>Validation loss</th></tr></thead>
+            <tbody>
+                <tr><td>8×8 linear baseline</td><td>79 / 80</td><td>19 / 20</td><td>0.5076</td></tr>
+                <tr><td>16×16 linear baseline</td><td>80 / 80</td><td>18 / 20</td><td>0.3600</td></tr>
+                <tr><td>16×16 MLP, 128 → 64 hidden layers</td><td>80 / 80</td><td>18 / 20</td><td>0.1408</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <p>Neural network validation accuracy reached 19/20 at earlier checkpoints and finished at 18/20.
+        Lower loss and higher accuracy are different measures.
+        This small experiment does not establish which model generalizes best.</p>
+    <section id="precision-results" aria-labelledby="precision-heading">
+        <p class="eyebrow">Integer inference</p>
+        <h2 id="precision-heading">Fixed-point results.</h2>
+        <p>The final neural network checkpoint was also evaluated using integer
+            calculations. All four formats cover about −32 to 32 and use
+            32-bit accumulators. The comparison changes fractional precision.</p>
+        <div class="table-wrap">
+            <table>
+                <caption>Checkpoint 1000 · 80 training and 20 validation drawings</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Storage / fractional bits</th>
+                        <th scope="col">Training correct</th>
+                        <th scope="col">Validation correct</th>
+                        <th scope="col">Validation agreement with float</th>
+                        <th scope="col">Maximum validation score error</th>
+                        <th scope="col">Saturation events</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- FIXED_POINT_ROWS -->
+                </tbody>
+            </table>
+        </div>
+        <p>The 16-bit and 12-bit formats preserved the original predictions on all
+            100 drawings. The 10-bit format corrected one validation prediction.
+            One changed prediction does not establish better performance on
+            other handwriting.</p>
+        <p>With two fractional bits, the 8-bit format rounded 32,703 of 32,768
+            first-layer weights to zero. Accuracy dropped without saturation.
+            This result applies to the tested scale, not every 8-bit model.</p>
+        <p>Agreement counts predictions matching the floating-point model.
+            Score error compares output values after converting integers back
+            to the original scale. Saturation events include both data splits.</p>
+        <p>The integer implementation matched a separate scalar reference in
+            150 generated test cases, including 66 with accumulator saturation.</p>
+        <p><a href="../docs/fixed-point-v1.json" download="fixed-point-v1.json">Download the experiment report (JSON)</a></p>
+        <p>These are Python simulation results. FPGA execution, timing, and
+            resource use have not been measured.</p>
+    </section>
+    <p>Further work includes additional writers, broader model comparisons,
+        and an FPGA implementation checked against the software model.</p>
+</section>
 </main>
 
 <footer>
     <span>DIGIT / FPGA</span>
     <a href="https://github.com/abhiveer-chhiber/digit-fpga">Code and project notes ↗</a>
 </footer>
+
+<script>
+(() => {
+    const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (reduceMotion || !("IntersectionObserver" in window)) return;
+
+    const targets = document.querySelectorAll([
+        "#explorer > .section-heading",
+        "#overview > .eyebrow",
+        "#overview > h1",
+        "#overview > .overview-intro",
+        "#overview .overview-section",
+        "#project > .eyebrow",
+        "#project > h1",
+        "#project .story-copy",
+        "#methods > .eyebrow",
+        "#methods > h1",
+        "#methods .decision",
+        "#results > .eyebrow",
+        "#results > h1",
+        "#results > .table-wrap",
+        "#results > p",
+        "#precision-results"
+    ].join(","));
+
+    targets.forEach(element => element.classList.add("text-reveal"));
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+
+            entry.target.classList.add("text-reveal-visible");
+            observer.unobserve(entry.target);
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: "0px 0px -28px 0px"
+    });
+
+    targets.forEach(element => observer.observe(element));
+})();
+</script>
+
 </body>
 </html>
