@@ -672,3 +672,358 @@ button, select {
     html { scroll-padding-top: 76px; }
     main > section[id] { scroll-margin-top: 76px; }
 }
+
+/* Minimal black interface */
+:root {
+    --ink: #f2f2f2;
+    --muted: #969696;
+    --background: #000000;
+    --line: #242424;
+    --teal: #7cff6b;
+    --amber: #ff9f1c;
+    --paper: #000000;
+    --paper-ink: #f2f2f2;
+}
+
+body,
+.paper-page,
+.site-header,
+footer,
+.paper-page .story,
+.paper-page .decisions,
+.paper-page .results {
+    background: #000000;
+    color: var(--ink);
+}
+
+.site-header {
+    border-right-color: #222222;
+}
+
+.site-header nav a {
+    color: #999999;
+}
+
+.site-header nav a:hover,
+.site-header nav a[aria-current] {
+    color: #ffffff;
+}
+
+.site-header nav a[aria-current] {
+    border-left-color: #7cff6b;
+}
+
+h1, h2, h3 {
+    color: #f5f5f5;
+}
+
+.eyebrow,
+.intro,
+.technical-note,
+.story-copy,
+.decision p,
+.results p {
+    color: #999999;
+}
+
+button,
+select {
+    background: #080808;
+    color: #eeeeee;
+    border: 1px solid #303030;
+    border-radius: 2px;
+}
+
+button:hover,
+select:hover {
+    background: #151515;
+    border-color: #666666;
+}
+
+#play,
+#predict-drawing {
+    background: #7cff6b;
+    color: #000000;
+    border-color: #7cff6b;
+}
+
+#play:hover,
+#predict-drawing:hover {
+    background: #a0ff94;
+}
+
+.network-stage {
+    background: #000000;
+    border-color: #252525;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.overview-section,
+.decision,
+.inspection {
+    border-color: #252525;
+}
+
+pre {
+    background: #080808;
+    color: #dddddd;
+    border-left-color: #7cff6b;
+}
+
+footer {
+    border-top-color: #222222;
+}
+
+#drawing-status,
+#status {
+    color: #7cff6b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+
+/* Single-page section navigation */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 32px;
+}
+
+main > section[id] {
+    scroll-margin-top: 28px;
+}
+
+.site-header nav a[aria-current="location"] {
+    border-left-color: var(--teal);
+    color: var(--ink);
+}
+
+#overview,
+#project,
+#methods,
+#results {
+    border-top: 1px solid var(--line);
+}
+
+@media (max-width: 850px) {
+    html { scroll-padding-top: 76px; }
+    main > section[id] { scroll-margin-top: 76px; }
+}
+
+
+/* Minimal top navigation and subtle text motion */
+body {
+    padding-left: 0;
+}
+
+.site-header {
+    position: sticky;
+    inset: auto;
+    top: 0;
+    width: 100%;
+    height: auto;
+    min-height: 66px;
+    overflow: visible;
+    padding: 14px clamp(20px, 4vw, 60px);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    border: 0;
+    border-bottom: 1px solid #202020;
+    background: rgb(0 0 0 / 92%);
+    backdrop-filter: blur(14px);
+    z-index: 50;
+}
+
+.site-header .wordmark {
+    color: #f2f2f2;
+    font-size: 12px;
+    letter-spacing: .14em;
+}
+
+.site-header nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    width: auto;
+    gap: clamp(16px, 2.5vw, 34px);
+    font-size: 12px;
+}
+
+.site-header nav a {
+    padding: 8px 0;
+    border: 0;
+    border-bottom: 1px solid transparent;
+    color: #888888;
+    white-space: nowrap;
+    transition: color 240ms ease, border-color 240ms ease;
+}
+
+.site-header nav a:hover {
+    color: #ffffff;
+    border-bottom-color: #555555;
+}
+
+.site-header nav a[aria-current="location"] {
+    color: #ffffff;
+    border-bottom-color: var(--teal);
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 86px;
+}
+
+main {
+    min-height: 0;
+}
+
+main > section[id] {
+    scroll-margin-top: 86px;
+}
+
+button, select, input {
+    transition:
+        color 220ms ease,
+        background-color 220ms ease,
+        border-color 220ms ease,
+        box-shadow 220ms ease;
+}
+
+a {
+    transition: color 220ms ease;
+}
+
+.network-stage {
+    transition: border-color 300ms ease;
+}
+
+.network-stage:hover {
+    border-color: #414141;
+    box-shadow: none;
+}
+
+.text-reveal {
+    opacity: 0;
+    transform: translateY(7px);
+    filter: blur(1px);
+    transition:
+        opacity 700ms cubic-bezier(.2, .7, .25, 1),
+        transform 700ms cubic-bezier(.2, .7, .25, 1),
+        filter 700ms cubic-bezier(.2, .7, .25, 1);
+}
+
+.text-reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+}
+
+::selection {
+    background: #7cff6b;
+    color: #000000;
+}
+
+@media (max-width: 1000px) {
+    .site-header {
+        padding-left: 22px;
+        padding-right: 22px;
+        gap: 18px;
+    }
+
+    .site-header nav {
+        gap: 16px;
+    }
+}
+
+@media (max-width: 850px) {
+    html {
+        scroll-padding-top: 76px;
+    }
+
+    main > section[id] {
+        scroll-margin-top: 76px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    .text-reveal {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+    }
+
+    button, select, input, a, .network-stage {
+        transition: none;
+    }
+}
+
+
+/* Labels for the WebGL network view. */
+.network-layer-labels {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+}
+.network-layer-label {
+    position: absolute;
+    transform: translate(-50%, 0);
+    color: #f2f2f2;
+    font: 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+    letter-spacing: .08em;
+    white-space: nowrap;
+    text-shadow: 0 1px 8px #000;
+    opacity: .82;
+}
+.stage-caption { z-index: 2; }
+@media (max-width: 560px) {
+    .network-layer-label { font-size: 8px; letter-spacing: 0; }
+}
+
+
+/* Network viewer polish */
+.network-stage {
+    background: #000;
+    border: 1px solid #222;
+    border-radius: 3px;
+    box-shadow: none;
+}
+.network-layer-labels {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2;
+}
+.network-layer-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    font: 9px ui-monospace, SFMono-Regular, Consolas, monospace;
+    letter-spacing: .16em;
+    opacity: .78;
+    text-shadow: 0 0 12px currentColor;
+}
+.stage-caption { z-index: 3; }
+
+
+.network-key-note {
+    flex-basis: 100%;
+    color: var(--muted);
+    line-height: 1.5;
+}
