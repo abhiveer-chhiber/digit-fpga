@@ -19,6 +19,9 @@ let targetYaw = -0.28, targetPitch = 0.12;
 let cameraFrame = null, lastCameraTime = 0;
 let displayedActivations = null, displayedGradients = null;
 let visualTransition = null, visualFrame = null;
+let chartProgress = 1, chartRevealStart = null, chartRevealFrame = null;
+let chartMarkerEpoch = null, chartMarkerFrom = null, chartMarkerTo = null;
+let chartMarkerStart = null, chartMarkerFrame = null;
 
 const snapshot = () => data.snapshots[checkpointIndex];
 const format = value => Math.abs(value) < 0.0001 && value !== 0
@@ -208,27 +211,93 @@ function drawChart(id, trainKey, validationKey, accuracy) {
         );
     }
 
+    const lastPoint = (history.length - 1) * chartProgress;
+    const lastIndex = Math.floor(lastPoint);
+    const partial = lastPoint - lastIndex;
+
     for (const [key, color] of [
         [trainKey, "#83d8c8"], [validationKey, "#e9b679"]
     ]) {
         context.strokeStyle = color;
         context.lineWidth = 1.8;
+        context.lineCap = "round";
+        context.lineJoin = "round";
         context.beginPath();
-        history.forEach((row, index) => {
+
+        for (let index = 0; index <= lastIndex; index++) {
+            const row = history[index];
             if (index === 0) context.moveTo(x(row.epoch), y(row[key]));
             else context.lineTo(x(row.epoch), y(row[key]));
-        });
+        }
+
+        if (lastIndex < history.length - 1 && partial > 0) {
+            const from = history[lastIndex], to = history[lastIndex + 1];
+            const epoch = from.epoch + (to.epoch - from.epoch) * partial;
+            const value = from[key] + (to[key] - from[key]) * partial;
+            context.lineTo(x(epoch), y(value));
+        }
         context.stroke();
     }
     context.strokeStyle = "#e9eef5";
     context.lineWidth = 1;
     context.beginPath();
-    context.moveTo(x(snapshot().epoch), top);
-    context.lineTo(x(snapshot().epoch), bottom);
+    const markerEpoch = chartMarkerEpoch ?? snapshot().epoch;
+    context.moveTo(x(markerEpoch), top);
+    context.lineTo(x(markerEpoch), bottom);
     context.stroke();
     context.fillStyle = "#a7b5c8";
     context.fillText("0", left, h - 12);
     context.fillText(`Epoch ${finalEpoch}`, Math.max(left, right - 80), h - 12);
+}
+
+function setChartMarker(epoch) {
+    if (chartMarkerEpoch === null || reducedMotion) {
+        chartMarkerEpoch = epoch;
+        return;
+    }
+
+    chartMarkerFrom = chartMarkerEpoch;
+    chartMarkerTo = epoch;
+    chartMarkerStart = null;
+    if (chartMarkerFrame === null) {
+        chartMarkerFrame = requestAnimationFrame(animateChartMarker);
+    }
+}
+
+function animateChartMarker(time) {
+    if (chartMarkerStart === null) chartMarkerStart = time;
+    const progress = Math.min((time - chartMarkerStart) / 360, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    chartMarkerEpoch = chartMarkerFrom
+        + (chartMarkerTo - chartMarkerFrom) * eased;
+
+    drawChart("loss-chart", "train_loss", "validation_loss", false);
+    drawChart("accuracy-chart", "train_accuracy", "validation_accuracy", true);
+
+    if (progress < 1) {
+        chartMarkerFrame = requestAnimationFrame(animateChartMarker);
+    } else {
+        chartMarkerEpoch = chartMarkerTo;
+        chartMarkerFrame = null;
+        chartMarkerStart = null;
+    }
+}
+
+function animateChartReveal(time) {
+    if (chartRevealStart === null) chartRevealStart = time;
+    const progress = Math.min((time - chartRevealStart) / 900, 1);
+    chartProgress = 1 - Math.pow(1 - progress, 3);
+
+    drawChart("loss-chart", "train_loss", "validation_loss", false);
+    drawChart("accuracy-chart", "train_accuracy", "validation_accuracy", true);
+
+    if (progress < 1) {
+        chartRevealFrame = requestAnimationFrame(animateChartReveal);
+    } else {
+        chartProgress = 1;
+        chartRevealFrame = null;
+        chartRevealStart = null;
+    }
 }
 
 function updateCalculation() {
@@ -240,6 +309,7 @@ function updateCalculation() {
 
     $("timeline").value = checkpointIndex;
     const metrics = data.history.find(row => row.epoch === snapshot().epoch);
+    setChartMarker(snapshot().epoch);
     $("epoch").textContent =
         `Epoch ${snapshot().epoch} · train ${(metrics.train_accuracy * 100).toFixed(1)}% · validation ${(metrics.validation_accuracy * 100).toFixed(1)}%`;
     drawChart("loss-chart", "train_loss", "validation_loss", false);
@@ -801,8 +871,12 @@ async function initialize() {
         populateNeuronSelect();
         $("viewer").hidden = false;
         $("viewer").classList.add("is-ready");
+        chartProgress = reducedMotion ? 1 : 0;
         resize();
         updateCalculation();
+        if (!reducedMotion) {
+            chartRevealFrame = requestAnimationFrame(animateChartReveal);
+        }
         $("status").textContent =
             `Recorded weights loaded · all ${data.snapshots.length * data.samples.length} checkpoint predictions match Python · maximum difference ${error.toExponential(2)}`;
     } catch (error) {
