@@ -321,7 +321,6 @@ body {
     border-right: 1px solid var(--line);
     background: var(--background);
     z-index: 10;
-    view-transition-name: page-navigation;
 }
 .site-header nav {
     display: flex;
@@ -345,7 +344,6 @@ body {
 main {
     min-width: 0;
     min-height: calc(100vh - 100px);
-    view-transition-name: page-content;
 }
 .paper-page {
     background: var(--background);
@@ -401,39 +399,9 @@ footer {
 }
 .skip-link:focus { transform: none; }
 
-/* Incoming content washes across the outgoing page. */
-@view-transition { navigation: auto; }
-
-::view-transition-group(root),
-::view-transition-group(page-content),
-::view-transition-group(page-navigation),
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-old(page-navigation),
-::view-transition-new(page-navigation) {
-    animation: none;
-}
-::view-transition-old(root),
-::view-transition-old(page-navigation) {
-    display: none;
-}
-::view-transition-image-pair(page-content) {
-    isolation: isolate;
-}
-::view-transition-old(page-content) {
-    animation: none;
-    mix-blend-mode: normal;
-    z-index: 1;
-}
-::view-transition-new(page-content) {
-    animation: page-wash 440ms cubic-bezier(.22, .65, .28, 1) both;
-    mix-blend-mode: normal;
-    z-index: 2;
-}
-@keyframes page-wash {
-    from { clip-path: inset(0 100% 0 0); }
-    to { clip-path: inset(0 0 0 0); }
-}
+/* Section links scroll within the single-page project display. */
+html { scroll-padding-top: 76px; }
+main > section[id] { scroll-margin-top: 28px; }
 
 @media (max-width: 1000px) {
     :root { --rail-width: 160px; }
@@ -698,4 +666,9 @@ button, select {
     .probability-fill {
         animation: none !important;
     }
+}
+
+@media (max-width: 850px) {
+    html { scroll-padding-top: 76px; }
+    main > section[id] { scroll-margin-top: 76px; }
 }
